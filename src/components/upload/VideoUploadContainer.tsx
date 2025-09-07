@@ -5,6 +5,7 @@ import { useVideoStore, VideoFile } from '@/store/useVideoStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, ArrowLeft } from 'lucide-react';
+import { videoApiService } from '@/services/api';
 
 export function VideoUploadContainer() {
   const {
@@ -20,76 +21,102 @@ export function VideoUploadContainer() {
 
   const [error, setError] = useState<string | null>(null);
 
-  // Simulate file upload and processing
+  // Handle file upload with Spring Boot API integration
   const handleFileSelect = useCallback(async (file: File) => {
     setError(null);
     setIsUploading(true);
 
-    // Create video file object
-    const videoFile: VideoFile = {
-      id: Date.now().toString(),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      file,
-      url: URL.createObjectURL(file),
-    };
-
-    setCurrentVideo(videoFile);
-
-    // Initialize progress
-    setUploadProgress({
-      videoId: videoFile.id,
-      progress: 0,
-      status: 'uploading',
-      message: 'Preparing upload...',
-    });
-
     try {
-      // Simulate upload progress
-      await simulateUploadProgress(videoFile.id);
+      // Upload to Spring Boot API
+      const uploadResponse = await videoApiService.uploadVideo(file);
       
-      // Simulate processing
-      await simulateProcessing(videoFile.id);
-      
-      // Mark as completed
-      updateProgress(videoFile.id, 100, 'completed', 'Video processed successfully!');
+      if (!uploadResponse.success || !uploadResponse.data) {
+        throw new Error(uploadResponse.error || 'Upload failed');
+      }
+
+      const { jobId, videoId } = uploadResponse.data;
+
+      // Create video file object with job tracking
+      const videoFile: VideoFile = {
+        id: videoId,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file,
+        url: URL.createObjectURL(file),
+        jobId,
+      };
+
+      setCurrentVideo(videoFile);
+
+      // Initialize progress tracking
+      setUploadProgress({
+        videoId: videoFile.id,
+        progress: 0,
+        status: 'uploading',
+        message: 'Upload initiated successfully...',
+      });
+
+      // Start polling for status updates
+      await pollProcessingStatus(jobId, videoFile.id);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
-      updateProgress(videoFile.id, 0, 'error', 'Upload failed. Please try again.');
+      setUploadProgress({
+        videoId: 'error',
+        progress: 0,
+        status: 'error',
+        message: 'Upload failed. Please try again.',
+      });
     } finally {
       setIsUploading(false);
     }
-  }, [setCurrentVideo, setUploadProgress, setIsUploading, updateProgress]);
+  }, [setCurrentVideo, setUploadProgress, setIsUploading]);
 
-  // Simulate upload progress with realistic timing
-  const simulateUploadProgress = async (videoId: string): Promise<void> => {
-    const steps = [
-      { progress: 10, message: 'Validating video file...' },
-      { progress: 25, message: 'Uploading to secure storage...' },
-      { progress: 50, message: 'Analyzing video properties...' },
-      { progress: 75, message: 'Preparing for processing...' },
-      { progress: 85, message: 'Upload complete!' },
-    ];
+  // Poll Spring Boot API for processing status updates
+  const pollProcessingStatus = async (jobId: string, videoId: string): Promise<void> => {
+    const pollInterval = 2000; // Poll every 2 seconds
+    const maxAttempts = 150; // 5 minutes max polling
+    let attempts = 0;
 
-    for (const step of steps) {
-      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 600));
-      updateProgress(videoId, step.progress, 'uploading', step.message);
-    }
-  };
+    const poll = async (): Promise<void> => {
+      if (attempts >= maxAttempts) {
+        throw new Error('Processing timeout - please try again');
+      }
 
-  // Simulate backend processing
-  const simulateProcessing = async (videoId: string): Promise<void> => {
-    const steps = [
-      { progress: 90, message: 'Initializing AI transcription...', status: 'processing' as const },
-      { progress: 95, message: 'Generating intelligent subtitles...', status: 'processing' as const },
-    ];
+      attempts++;
+      const statusResponse = await videoApiService.getProcessingStatus(jobId);
+      
+      if (!statusResponse.success || !statusResponse.data) {
+        throw new Error(statusResponse.error || 'Status check failed');
+      }
 
-    for (const step of steps) {
-      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-      updateProgress(videoId, step.progress, step.status, step.message);
-    }
+      const { status, progress, message } = statusResponse.data;
+
+      updateProgress(videoId, progress, status as any, message);
+
+      if (status === 'completed') {
+        // Fetch subtitle data once processing is complete
+        const subtitleResponse = await videoApiService.getSubtitles(videoId);
+        if (subtitleResponse.success && subtitleResponse.data) {
+          // Update store with subtitle data for the video player
+          const { setSubtitles } = useVideoStore.getState();
+          setSubtitles(subtitleResponse.data);
+        }
+        return;
+      }
+
+      if (status === 'failed') {
+        throw new Error(message || 'Processing failed');
+      }
+
+      // Continue polling if still processing
+      if (status === 'queued' || status === 'uploading' || status === 'transcribing') {
+        setTimeout(poll, pollInterval);
+      }
+    };
+
+    await poll();
   };
 
   const handleRetry = () => {
@@ -119,7 +146,7 @@ export function VideoUploadContainer() {
           )}
           
           {uploadProgress.status === 'completed' && (
-            <Button onClick={() => console.log('Navigate to editor')} size="sm">
+            <Button onClick={() => window.location.href = '/editor'} size="sm">
               Continue to Editor
             </Button>
           )}

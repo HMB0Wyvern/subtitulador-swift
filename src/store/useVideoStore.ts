@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { SubtitleData } from '@/services/api';
 
 export interface VideoFile {
   id: string;
@@ -8,6 +9,7 @@ export interface VideoFile {
   duration?: number;
   file?: File;
   url?: string;
+  jobId?: string; // For tracking backend processing
 }
 
 export interface UploadProgress {
@@ -35,6 +37,10 @@ interface VideoState {
   // Processing status from backend
   processingStatus: ProcessingStatus | null;
   
+  // Subtitle data
+  subtitles: SubtitleData[];
+  currentSubtitle: SubtitleData | null;
+  
   // UI state
   isUploading: boolean;
   isDragOver: boolean;
@@ -43,6 +49,8 @@ interface VideoState {
   setCurrentVideo: (video: VideoFile | null) => void;
   setUploadProgress: (progress: UploadProgress | null) => void;
   setProcessingStatus: (status: ProcessingStatus | null) => void;
+  setSubtitles: (subtitles: SubtitleData[]) => void;
+  setCurrentSubtitle: (subtitle: SubtitleData | null) => void;
   setIsUploading: (uploading: boolean) => void;
   setIsDragOver: (dragOver: boolean) => void;
   
@@ -55,6 +63,8 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   currentVideo: null,
   uploadProgress: null,
   processingStatus: null,
+  subtitles: [],
+  currentSubtitle: null,
   isUploading: false,
   isDragOver: false,
 
@@ -64,6 +74,10 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   
   setProcessingStatus: (status) => set({ processingStatus: status }),
   
+  setSubtitles: (subtitles) => set({ subtitles }),
+  
+  setCurrentSubtitle: (subtitle) => set({ currentSubtitle: subtitle }),
+  
   setIsUploading: (uploading) => set({ isUploading: uploading }),
   
   setIsDragOver: (dragOver) => set({ isDragOver: dragOver }),
@@ -72,6 +86,8 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     currentVideo: null,
     uploadProgress: null,
     processingStatus: null,
+    subtitles: [],
+    currentSubtitle: null,
     isUploading: false,
     isDragOver: false,
   }),
