@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { VideoUploadZone } from './VideoUploadZone';
 import { ProgressIndicator } from './ProgressIndicator';
 import { useVideoStore, VideoFile } from '@/store/useVideoStore';
@@ -8,6 +9,7 @@ import { RefreshCw, ArrowLeft } from 'lucide-react';
 import { videoApiService } from '@/services/api';
 
 export function VideoUploadContainer() {
+  const navigate = useNavigate();
   const {
     currentVideo,
     uploadProgress,
@@ -146,7 +148,7 @@ export function VideoUploadContainer() {
           )}
           
           {uploadProgress.status === 'completed' && (
-            <Button onClick={() => window.location.href = '/editor'} size="sm">
+            <Button onClick={() => navigate('/editor')} size="sm">
               Continue to Editor
             </Button>
           )}

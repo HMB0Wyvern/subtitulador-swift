@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { VideoPlayer, VideoPlayerRef } from '@/components/video/VideoPlayer';
 import { useVideoStore } from '@/store/useVideoStore';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Download, Settings } from 'lucide-react';
 
 export default function VideoEditor() {
+  const navigate = useNavigate();
   const {
     currentVideo,
     subtitles,
@@ -26,6 +28,7 @@ export default function VideoEditor() {
 
   const handleBackToUpload = () => {
     resetState();
+    navigate('/');
   };
 
   const handleDownload = () => {
