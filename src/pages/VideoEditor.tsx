@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Download, Settings, Palette, Pencil } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { subtitlesToSRT, subtitlesToASS, triggerDownload } from '@/utils/subtitleExport';
 
 export default function VideoEditor() {
   const navigate = useNavigate();
