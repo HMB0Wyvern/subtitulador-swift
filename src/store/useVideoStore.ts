@@ -85,6 +85,12 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   isUploading: false,
   isDragOver: false,
 
+  exportPreferences: {
+    autoDownloadOnComplete: true,
+    formats: { srt: true, ass: false, json: false },
+    quality: 'medium',
+  },
+
   setCurrentVideo: (video) => set({ currentVideo: video }),
   
   setUploadProgress: (progress) => set({ uploadProgress: progress }),
