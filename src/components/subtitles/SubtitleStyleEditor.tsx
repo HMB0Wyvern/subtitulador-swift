@@ -87,9 +87,9 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
             <Slider
               value={[style.fontSize]}
               onValueChange={([value]) => onStyleChange({ fontSize: value })}
-              min={12}
-              max={72}
-              step={1}
+              min={8}
+              max={96}
+              step={0.1}
               className="mt-2"
             />
           </div>
@@ -175,12 +175,12 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
                 <Label className="text-xs">Width: {style.outline.width}px</Label>
                 <Slider
                   value={[style.outline.width]}
-                  onValueChange={([value]) => onStyleChange({ 
-                    outline: { ...style.outline, width: value } 
+                  onValueChange={([value]) => onStyleChange({
+                    outline: { ...style.outline, width: value }
                   })}
-                  min={1}
+                  min={0}
                   max={10}
-                  step={1}
+                  step={0.1}
                   className="mt-2"
                 />
               </div>
@@ -224,12 +224,12 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
                   <Label className="text-xs">Offset X: {style.shadow.offsetX}px</Label>
                   <Slider
                     value={[style.shadow.offsetX]}
-                    onValueChange={([value]) => onStyleChange({ 
-                      shadow: { ...style.shadow, offsetX: value } 
+                    onValueChange={([value]) => onStyleChange({
+                      shadow: { ...style.shadow, offsetX: value }
                     })}
-                    min={-10}
-                    max={10}
-                    step={1}
+                    min={-50}
+                    max={50}
+                    step={0.1}
                     className="mt-2"
                   />
                 </div>
@@ -238,12 +238,12 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
                   <Label className="text-xs">Offset Y: {style.shadow.offsetY}px</Label>
                   <Slider
                     value={[style.shadow.offsetY]}
-                    onValueChange={([value]) => onStyleChange({ 
-                      shadow: { ...style.shadow, offsetY: value } 
+                    onValueChange={([value]) => onStyleChange({
+                      shadow: { ...style.shadow, offsetY: value }
                     })}
-                    min={-10}
-                    max={10}
-                    step={1}
+                    min={-50}
+                    max={50}
+                    step={0.1}
                     className="mt-2"
                   />
                 </div>
@@ -253,12 +253,12 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
                 <Label className="text-xs">Blur: {style.shadow.blur}px</Label>
                 <Slider
                   value={[style.shadow.blur]}
-                  onValueChange={([value]) => onStyleChange({ 
-                    shadow: { ...style.shadow, blur: value } 
+                  onValueChange={([value]) => onStyleChange({
+                    shadow: { ...style.shadow, blur: value }
                   })}
                   min={0}
-                  max={20}
-                  step={1}
+                  max={50}
+                  step={0.1}
                   className="mt-2"
                 />
               </div>
@@ -317,12 +317,12 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
               <Label className="text-xs">Margin X: {style.position.marginX}px</Label>
               <Slider
                 value={[style.position.marginX]}
-                onValueChange={([value]) => onStyleChange({ 
-                  position: { ...style.position, marginX: value } 
+                onValueChange={([value]) => onStyleChange({
+                  position: { ...style.position, marginX: value }
                 })}
                 min={0}
-                max={100}
-                step={5}
+                max={200}
+                step={0.5}
                 className="mt-2"
               />
             </div>
@@ -331,12 +331,12 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
               <Label className="text-xs">Margin Y: {style.position.marginY}px</Label>
               <Slider
                 value={[style.position.marginY]}
-                onValueChange={([value]) => onStyleChange({ 
-                  position: { ...style.position, marginY: value } 
+                onValueChange={([value]) => onStyleChange({
+                  position: { ...style.position, marginY: value }
                 })}
                 min={0}
-                max={100}
-                step={5}
+                max={200}
+                step={0.5}
                 className="mt-2"
               />
             </div>
