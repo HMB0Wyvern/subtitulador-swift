@@ -3,7 +3,7 @@ import { SubtitleData } from '@/services/api';
 import { SubtitleOverlay } from './SubtitleOverlay';
 import { VideoControls } from './VideoControls';
 import { Card } from '@/components/ui/card';
-import { Slider as imported } from '@/components/ui/slider';
+import { Slider } from '@/components/ui/slider';
 
 export interface VideoPlayerProps {
   videoUrl: string;
