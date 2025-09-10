@@ -1,10 +1,12 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VideoPlayer, VideoPlayerRef } from '@/components/video/VideoPlayer';
 import { useVideoStore } from '@/store/useVideoStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Download, Settings } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Download, Settings, Save, Edit3 } from 'lucide-react';
 
 export default function VideoEditor() {
   const navigate = useNavigate();
@@ -12,10 +14,17 @@ export default function VideoEditor() {
     currentVideo,
     subtitles,
     setCurrentSubtitle,
+    setSubtitles,
     resetState
   } = useVideoStore();
 
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
+  const [editingSubtitle, setEditingSubtitle] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    startTime: 0,
+    endTime: 0,
+    text: ''
+  });
 
   const handleTimeUpdate = (currentTime: number) => {
     // Handle time updates for synchronization
@@ -24,6 +33,40 @@ export default function VideoEditor() {
 
   const handleSubtitleSelect = (subtitle: any) => {
     setCurrentSubtitle(subtitle);
+  };
+
+  const handleStartEdit = (subtitle: any) => {
+    setEditingSubtitle(subtitle.id);
+    setEditForm({
+      startTime: subtitle.startTime,
+      endTime: subtitle.endTime,
+      text: subtitle.text
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingSubtitle) return;
+    
+    const updatedSubtitles = subtitles.map(subtitle => 
+      subtitle.id === editingSubtitle 
+        ? { ...subtitle, ...editForm }
+        : subtitle
+    );
+    
+    setSubtitles(updatedSubtitles);
+    setEditingSubtitle(null);
+    setEditForm({ startTime: 0, endTime: 0, text: '' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSubtitle(null);
+    setEditForm({ startTime: 0, endTime: 0, text: '' });
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleBackToUpload = () => {
@@ -104,15 +147,87 @@ export default function VideoEditor() {
                   {subtitles.map((subtitle, index) => (
                     <div
                       key={subtitle.id}
-                      className="p-3 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer transition-colors"
-                      onClick={() => {
-                        videoPlayerRef.current?.seekTo(subtitle.startTime);
-                      }}
+                      className="p-3 rounded-lg border bg-card transition-colors"
                     >
-                      <div className="text-xs text-muted-foreground mb-1">
-                        {Math.floor(subtitle.startTime)}s - {Math.floor(subtitle.endTime)}s
-                      </div>
-                      <div className="text-sm">{subtitle.text}</div>
+                      {editingSubtitle === subtitle.id ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground">Start Time (s)</label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                value={editForm.startTime}
+                                onChange={(e) => setEditForm(prev => ({ 
+                                  ...prev, 
+                                  startTime: parseFloat(e.target.value) || 0 
+                                }))}
+                                className="text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground">End Time (s)</label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                value={editForm.endTime}
+                                onChange={(e) => setEditForm(prev => ({ 
+                                  ...prev, 
+                                  endTime: parseFloat(e.target.value) || 0 
+                                }))}
+                                className="text-xs"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">Text</label>
+                            <Textarea
+                              value={editForm.text}
+                              onChange={(e) => setEditForm(prev => ({ 
+                                ...prev, 
+                                text: e.target.value 
+                              }))}
+                              className="text-sm min-h-[60px]"
+                              placeholder="Enter subtitle text..."
+                            />
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={handleSaveEdit}>
+                              <Save className="w-3 h-3 mr-1" />
+                              Save
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs text-muted-foreground">
+                              {formatTime(subtitle.startTime)} - {formatTime(subtitle.endTime)}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleStartEdit(subtitle)}
+                            >
+                              <Edit3 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          
+                          <div 
+                            className="text-sm cursor-pointer hover:bg-accent/50 p-2 rounded transition-colors"
+                            onClick={() => {
+                              videoPlayerRef.current?.seekTo(subtitle.startTime);
+                            }}
+                          >
+                            {subtitle.text}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
