@@ -24,6 +24,7 @@ export interface VideoControlsProps {
   onVolumeChange: (volume: number) => void;
   onMute: () => void;
   onFullscreen: () => void;
+  showProgress?: boolean;
 }
 
 export function VideoControls({
