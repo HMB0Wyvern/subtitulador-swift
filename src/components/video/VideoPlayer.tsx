@@ -90,6 +90,8 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
       }
     };
 
+    const clamp = (val: number, min: number, max: number) => Math.min(max, Math.max(min, val));
+
     // Playback controls
     const togglePlayPause = useCallback(() => {
       if (videoRef.current) {
@@ -103,14 +105,16 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
 
     const handleSeek = useCallback((time: number) => {
       if (videoRef.current) {
-        videoRef.current.currentTime = time;
+        const dur = duration || videoRef.current.duration || Number.MAX_SAFE_INTEGER;
+        videoRef.current.currentTime = clamp(time, 0, dur);
       }
-    }, []);
+    }, [duration]);
 
     const handleVolumeSet = useCallback((newVolume: number) => {
       if (videoRef.current) {
-        videoRef.current.volume = newVolume;
-        setVolume(newVolume);
+        const v = clamp(newVolume, 0, 1);
+        videoRef.current.volume = v;
+        setVolume(v);
       }
     }, []);
 
@@ -145,11 +149,31 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
             break;
           case 'ArrowLeft':
             e.preventDefault();
-            handleSeek(Math.max(0, currentTime - 10));
+            handleSeek(currentTime - 3);
             break;
           case 'ArrowRight':
             e.preventDefault();
-            handleSeek(Math.min(duration, currentTime + 10));
+            handleSeek(currentTime + 3);
+            break;
+          case 'KeyJ':
+            e.preventDefault();
+            handleSeek(currentTime - 3);
+            break;
+          case 'KeyL':
+            e.preventDefault();
+            handleSeek(currentTime + 3);
+            break;
+          case 'ArrowUp':
+            e.preventDefault();
+            handleVolumeSet(volume + 0.05);
+            break;
+          case 'ArrowDown':
+            e.preventDefault();
+            handleVolumeSet(volume - 0.05);
+            break;
+          case 'KeyK':
+            e.preventDefault();
+            togglePlayPause();
             break;
           case 'KeyM':
             e.preventDefault();
