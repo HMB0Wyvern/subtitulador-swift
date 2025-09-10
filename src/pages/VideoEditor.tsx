@@ -372,16 +372,16 @@ export default function VideoEditor() {
                     try {
                       const base = (cv?.name?.split('.').slice(0, -1).join('.') || 'subtitles');
                       if (exportPreferences.formats.srt) {
-                        const srt = require('@/utils/subtitleExport').subtitlesToSRT(subtitles);
-                        require('@/utils/subtitleExport').triggerDownload(`${base}.srt`, srt, 'text/plain;charset=utf-8');
+                        const srt = subtitlesToSRT(subtitles);
+                        triggerDownload(`${base}.srt`, srt, 'text/plain;charset=utf-8');
                       }
                       if (exportPreferences.formats.ass) {
-                        const ass = require('@/utils/subtitleExport').subtitlesToASS(subtitles);
-                        require('@/utils/subtitleExport').triggerDownload(`${base}.ass`, ass, 'text/plain;charset=utf-8');
+                        const ass = subtitlesToASS(subtitles);
+                        triggerDownload(`${base}.ass`, ass, 'text/plain;charset=utf-8');
                       }
                       if (exportPreferences.formats.json) {
                         const json = JSON.stringify(subtitles, null, 2);
-                        require('@/utils/subtitleExport').triggerDownload(`${base}.json`, json, 'application/json;charset=utf-8');
+                        triggerDownload(`${base}.json`, json, 'application/json;charset=utf-8');
                       }
                       toast({ title: 'Descargas iniciadas', description: 'Subtítulos exportados.' });
                     } catch (e) {
