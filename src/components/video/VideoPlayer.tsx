@@ -3,6 +3,7 @@ import { SubtitleData } from '@/services/api';
 import { SubtitleOverlay } from './SubtitleOverlay';
 import { VideoControls } from './VideoControls';
 import { Card } from '@/components/ui/card';
+import { Slider as imported } from '@/components/ui/slider';
 
 export interface VideoPlayerProps {
   videoUrl: string;
@@ -211,6 +212,8 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
             onPause={handlePause}
             onLoadedMetadata={handleLoadedMetadataWrapped}
             onVolumeChange={handleVolumeChange}
+            controls={false}
+            playsInline
             preload="metadata"
           />
 
@@ -234,6 +237,7 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
             onVolumeChange={handleVolumeSet}
             onMute={toggleMute}
             onFullscreen={toggleFullscreen}
+            showProgress={false}
           />
 
           {/* Click to play/pause overlay - only in center area to avoid blocking controls */}
@@ -241,6 +245,21 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
             className="absolute inset-x-0 top-0 bottom-16 cursor-pointer"
             onClick={togglePlayPause}
           />
+        </div>
+        {/* Timeline outside video */}
+        <div className="p-3">
+          <div className="flex items-center gap-3">
+            <div className="text-xs text-muted-foreground min-w-10 text-right">{Math.floor(currentTime/60)}:{Math.floor(currentTime%60).toString().padStart(2,'0')}</div>
+            <div className="flex-1">
+              <imported.Slider
+                value={[duration>0 ? (currentTime/duration)*100 : 0]}
+                max={100}
+                step={0.1}
+                onValueChange={(v)=>handleSeek(((v[0]||0)/100)*duration)}
+              />
+            </div>
+            <div className="text-xs text-muted-foreground min-w-10">{Math.floor(duration/60)}:{Math.floor(duration%60).toString().padStart(2,'0')}</div>
+          </div>
         </div>
       </Card>
     );
