@@ -251,7 +251,7 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
           <div className="flex items-center gap-3">
             <div className="text-xs text-muted-foreground min-w-10 text-right">{Math.floor(currentTime/60)}:{Math.floor(currentTime%60).toString().padStart(2,'0')}</div>
             <div className="flex-1">
-              <imported.Slider
+              <Slider
                 value={[duration>0 ? (currentTime/duration)*100 : 0]}
                 max={100}
                 step={0.1}
