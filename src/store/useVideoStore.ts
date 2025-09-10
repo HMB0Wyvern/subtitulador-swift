@@ -27,6 +27,13 @@ export interface ProcessingStatus {
   message: string;
 }
 
+type ExportQuality = 'low' | 'medium' | 'high';
+interface ExportPreferences {
+  autoDownloadOnComplete: boolean;
+  formats: { srt: boolean; ass: boolean; json: boolean };
+  quality: ExportQuality;
+}
+
 interface VideoState {
   // Current video being processed
   currentVideo: VideoFile | null;
