@@ -8,6 +8,7 @@ import { useVideoStore } from '@/store/useVideoStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Download, Settings } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 export default function VideoEditor() {
   const navigate = useNavigate();
