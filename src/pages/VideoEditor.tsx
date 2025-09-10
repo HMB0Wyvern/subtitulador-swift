@@ -7,7 +7,7 @@ import { StylePresets } from '@/components/subtitles/StylePresets';
 import { useVideoStore } from '@/store/useVideoStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Download, Settings } from 'lucide-react';
+import { ArrowLeft, Download, Settings, Palette, Pencil } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 export default function VideoEditor() {
@@ -23,6 +23,8 @@ export default function VideoEditor() {
   } = useVideoStore();
 
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
+  type CustomStyle = { id: string; name: string; style: SubtitleStyle };
+
   const [currentStyle, setCurrentStyle] = useState<SubtitleStyle>({
     fontFamily: 'Arial',
     fontSize: 24,
@@ -146,6 +148,37 @@ export default function VideoEditor() {
     navigate('/');
   };
 
+  const [openPanel, setOpenPanel] = useState<null | 'choose' | 'modify'>(null);
+  const [customStyles, setCustomStyles] = useState<CustomStyle[]>(() => {
+    try {
+      const raw = localStorage.getItem('customStyles');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const saveCustomStyle = () => {
+    const name = prompt('Nombre para el estilo');
+    if (!name) return;
+    const entry: CustomStyle = { id: `${Date.now()}`, name, style: currentStyle };
+    const next = [entry, ...customStyles].slice(0, 50);
+    setCustomStyles(next);
+    localStorage.setItem('customStyles', JSON.stringify(next));
+    toast({ title: 'Estilo guardado', description: `"${name}" añadido a tus estilos.` });
+  };
+
+  const applyCustomStyle = (entry: CustomStyle) => {
+    setCurrentStyle(entry.style);
+    handlePresetApply({ style: entry.style });
+  };
+
+  const removeCustomStyle = (id: string) => {
+    const next = customStyles.filter(s => s.id !== id);
+    setCustomStyles(next);
+    localStorage.setItem('customStyles', JSON.stringify(next));
+  };
+
   const handleDownload = () => {
     toast({
       title: 'Export coming soon',
@@ -190,10 +223,6 @@ export default function VideoEditor() {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Style Settings
-            </Button>
             <Button size="sm" onClick={handleDownload}>
               <Download className="w-4 h-4 mr-2" />
               Download Video
@@ -239,35 +268,91 @@ export default function VideoEditor() {
           </div>
 
           {/* Style Controls Panel */}
-          <div className="lg:col-span-3 space-y-4">
-            <SubtitleStyleEditor
-              style={currentStyle}
-              onStyleChange={handleStyleChange}
-              onPresetApply={handlePresetApply}
-            />
-            
-            <StylePresets onPresetApply={handlePresetApply} />
+          <div className="lg:col-span-3">
+            <div className="space-y-3">
+              <Button
+                variant={openPanel === 'choose' ? 'default' : 'outline'}
+                className="w-full justify-start"
+                onClick={() => setOpenPanel(p => (p === 'choose' ? null : 'choose'))}
+              >
+                <Palette className="w-4 h-4 mr-2" /> Elegir estilos
+              </Button>
+              <Button
+                variant={openPanel === 'modify' ? 'default' : 'outline'}
+                className="w-full justify-start"
+                onClick={() => setOpenPanel(p => (p === 'modify' ? null : 'modify'))}
+              >
+                <Pencil className="w-4 h-4 mr-2" /> Modificar estilo
+              </Button>
+            </div>
 
-            {/* Export Options */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Export Options</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" disabled>
-                  Export as MP4 with subtitles
-                </Button>
-                <Button variant="outline" className="w-full justify-start" disabled>
-                  Download subtitle file (.srt)
-                </Button>
-                <Button variant="outline" className="w-full justify-start" disabled>
-                  Download advanced subtitles (.ass)
-                </Button>
-                <div className="text-xs text-muted-foreground mt-2">
-                  Export features will be available in Phase 4
-                </div>
-              </CardContent>
-            </Card>
+            {/* Sliding panel area */}
+            <div className="relative mt-3 h-[1px]">
+              <div
+                className={`absolute right-0 top-0 z-10 w-full translate-x-0 transition-transform duration-300 ${openPanel ? 'translate-x-0' : 'translate-x-full'} `}
+              >
+                {openPanel === 'choose' && (
+                  <div className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Tus estilos</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <Button size="sm" variant="outline" onClick={saveCustomStyle} className="w-full">
+                          Guardar estilo actual
+                        </Button>
+                        {customStyles.length === 0 ? (
+                          <div className="text-xs text-muted-foreground">No tienes estilos guardados.</div>
+                        ) : (
+                          <div className="space-y-2">
+                            {customStyles.map(s => (
+                              <div key={s.id} className="flex items-center justify-between rounded-md border p-2">
+                                <div className="text-sm font-medium truncate pr-2">{s.name}</div>
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="secondary" onClick={() => applyCustomStyle(s)}>Aplicar</Button>
+                                  <Button size="sm" variant="ghost" onClick={() => removeCustomStyle(s.id)}>Eliminar</Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <StylePresets onPresetApply={handlePresetApply} />
+                  </div>
+                )}
+
+                {openPanel === 'modify' && (
+                  <SubtitleStyleEditor
+                    style={currentStyle}
+                    onStyleChange={handleStyleChange}
+                    onPresetApply={handlePresetApply}
+                  />
+                )}
+
+                {/* Export Options */}
+                <Card className="mt-3">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Export Options</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button variant="outline" className="w-full justify-start" disabled>
+                      Export as MP4 with subtitles
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" disabled>
+                      Download subtitle file (.srt)
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" disabled>
+                      Download advanced subtitles (.ass)
+                    </Button>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      Export features will be available in Phase 4
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
