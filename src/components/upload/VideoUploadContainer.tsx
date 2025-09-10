@@ -188,6 +188,18 @@ export function VideoUploadContainer() {
               <span>Auto-descargar al completar</span>
               <input type="checkbox" checked={exportPreferences.autoDownloadOnComplete} onChange={(e)=>setExportPreferences({ autoDownloadOnComplete: e.target.checked })} />
             </div>
+            <div className="flex items-center gap-3 text-sm">
+              <span>Calidad</span>
+              <select
+                className="h-9 rounded-md border border-input bg-background px-2"
+                value={exportPreferences.quality}
+                onChange={(e)=> setExportPreferences({ quality: e.target.value as any })}
+              >
+                <option value="low">Baja</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+              </select>
+            </div>
           </CardContent>
         </Card>
 
