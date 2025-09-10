@@ -146,7 +146,6 @@ export default function VideoEditor() {
   };
 
   const handleDownload = () => {
-    // TODO: Implement download functionality
     console.log('Download video with subtitles');
   };
 
