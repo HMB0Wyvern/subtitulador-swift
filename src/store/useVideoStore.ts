@@ -51,7 +51,10 @@ interface VideoState {
   // UI state
   isUploading: boolean;
   isDragOver: boolean;
-  
+
+  // Export preferences
+  exportPreferences: ExportPreferences;
+
   // Actions
   setCurrentVideo: (video: VideoFile | null) => void;
   setUploadProgress: (progress: UploadProgress | null) => void;
