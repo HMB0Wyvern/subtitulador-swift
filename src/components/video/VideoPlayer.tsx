@@ -201,7 +201,7 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
 
     return (
       <Card className={`relative bg-black overflow-hidden ${className}`}>
-        <div ref={containerRef} className="relative w-full bg-black group" style={aspectStyle}>
+        <div ref={containerRef} className="relative w-full bg-black group" style={{...aspectStyle, maxHeight: 'calc(100vh - 260px)'}}>
           {/* Video Element */}
           <video
             ref={videoRef}
