@@ -175,12 +175,32 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
       return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
+    const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
+
+    const updateNaturalSize = useCallback(() => {
+      if (videoRef.current) {
+        const w = videoRef.current.videoWidth;
+        const h = videoRef.current.videoHeight;
+        if (w && h) setNaturalSize({ width: w, height: h });
+      }
+    }, []);
+
+    useEffect(() => {
+      updateNaturalSize();
+    }, [updateNaturalSize]);
+
+    const handleLoadedMetadataWrapped = () => {
+      handleLoadedMetadata();
+      updateNaturalSize();
+    };
+
+    const aspectStyle = naturalSize
+      ? { aspectRatio: `${naturalSize.width} / ${naturalSize.height}` }
+      : { aspectRatio: '16 / 9' };
+
     return (
       <Card className={`relative bg-black overflow-hidden ${className}`}>
-        <div
-          ref={containerRef}
-          className="relative w-full aspect-video bg-black group"
-        >
+        <div ref={containerRef} className="relative w-full bg-black group" style={aspectStyle}>
           {/* Video Element */}
           <video
             ref={videoRef}
@@ -189,7 +209,7 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
             onTimeUpdate={handleTimeUpdate}
             onPlay={handlePlay}
             onPause={handlePause}
-            onLoadedMetadata={handleLoadedMetadata}
+            onLoadedMetadata={handleLoadedMetadataWrapped}
             onVolumeChange={handleVolumeChange}
             preload="metadata"
           />
