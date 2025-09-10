@@ -38,7 +38,8 @@ export function VideoControls({
   onSeek,
   onVolumeChange,
   onMute,
-  onFullscreen
+  onFullscreen,
+  showProgress = true,
 }: VideoControlsProps) {
   const [showControls, setShowControls] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
