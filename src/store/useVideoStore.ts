@@ -63,7 +63,9 @@ interface VideoState {
   setCurrentSubtitle: (subtitle: SubtitleData | null) => void;
   setIsUploading: (uploading: boolean) => void;
   setIsDragOver: (dragOver: boolean) => void;
-  
+
+  setExportPreferences: (prefs: Partial<ExportPreferences>) => void;
+
   // Subtitle editing actions
   updateSubtitle: (id: string, updates: Partial<SubtitleData>) => void;
   deleteSubtitle: (id: string) => void;
