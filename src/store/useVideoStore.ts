@@ -104,7 +104,15 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   setIsUploading: (uploading) => set({ isUploading: uploading }),
   
   setIsDragOver: (dragOver) => set({ isDragOver: dragOver }),
-  
+
+  setExportPreferences: (prefs) => set((state) => ({
+    exportPreferences: {
+      ...state.exportPreferences,
+      ...prefs,
+      formats: { ...state.exportPreferences.formats, ...(prefs.formats || {}) },
+    },
+  })),
+
   // Subtitle editing actions
   updateSubtitle: (id, updates) => set((state) => ({
     subtitles: state.subtitles.map(subtitle =>
