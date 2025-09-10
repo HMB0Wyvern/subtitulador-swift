@@ -147,7 +147,10 @@ export default function VideoEditor() {
   };
 
   const handleDownload = () => {
-    console.log('Download video with subtitles');
+    toast({
+      title: 'Export coming soon',
+      description: 'Export options will be enabled in a later phase.',
+    });
   };
 
   if (!currentVideo) {
