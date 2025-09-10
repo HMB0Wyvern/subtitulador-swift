@@ -216,9 +216,9 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
             onFullscreen={toggleFullscreen}
           />
 
-          {/* Click to play/pause overlay */}
+          {/* Click to play/pause overlay - only in center area to avoid blocking controls */}
           <div
-            className="absolute inset-0 cursor-pointer"
+            className="absolute inset-x-0 top-0 bottom-16 cursor-pointer"
             onClick={togglePlayPause}
           />
         </div>

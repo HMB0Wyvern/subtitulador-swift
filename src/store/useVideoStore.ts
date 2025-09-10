@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { SubtitleData } from '@/services/api';
+import { SubtitleData, SubtitleStyles } from '@/services/api';
 
 export interface VideoFile {
   id: string;
@@ -54,6 +54,11 @@ interface VideoState {
   setIsUploading: (uploading: boolean) => void;
   setIsDragOver: (dragOver: boolean) => void;
   
+  // Subtitle editing actions
+  updateSubtitle: (id: string, updates: Partial<SubtitleData>) => void;
+  deleteSubtitle: (id: string) => void;
+  addSubtitle: (afterId?: string) => void;
+  
   // Utility actions
   resetState: () => void;
   updateProgress: (videoId: string, progress: number, status?: UploadProgress['status'], message?: string) => void;
@@ -81,6 +86,61 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   setIsUploading: (uploading) => set({ isUploading: uploading }),
   
   setIsDragOver: (dragOver) => set({ isDragOver: dragOver }),
+  
+  // Subtitle editing actions
+  updateSubtitle: (id, updates) => set((state) => ({
+    subtitles: state.subtitles.map(subtitle =>
+      subtitle.id === id ? { ...subtitle, ...updates } : subtitle
+    )
+  })),
+  
+  deleteSubtitle: (id) => set((state) => ({
+    subtitles: state.subtitles.filter(subtitle => subtitle.id !== id)
+  })),
+  
+  addSubtitle: (afterId) => set((state) => {
+    const defaultStyles: SubtitleStyles = {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#ffffff',
+      backgroundColor: 'transparent',
+      outline: {
+        width: 2,
+        color: '#000000'
+      },
+      shadow: {
+        offsetX: 1,
+        offsetY: 1,
+        blur: 2,
+        color: 'rgba(0, 0, 0, 0.8)'
+      },
+      position: {
+        horizontal: 'center',
+        vertical: 'bottom',
+        marginX: 0,
+        marginY: 60
+      }
+    };
+    
+    const newSubtitle: SubtitleData = {
+      id: `subtitle_${Date.now()}`,
+      startTime: 0,
+      endTime: 5,
+      text: 'New subtitle',
+      styles: defaultStyles
+    };
+    
+    if (!afterId) {
+      return { subtitles: [newSubtitle, ...state.subtitles] };
+    }
+    
+    const index = state.subtitles.findIndex(s => s.id === afterId);
+    const newSubtitles = [...state.subtitles];
+    newSubtitles.splice(index + 1, 0, newSubtitle);
+    
+    return { subtitles: newSubtitles };
+  }),
   
   resetState: () => set({
     currentVideo: null,

@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VideoPlayer, VideoPlayerRef } from '@/components/video/VideoPlayer';
+import { SubtitleTextEditor } from '@/components/subtitles/SubtitleTextEditor';
+import { SubtitleStyleEditor, SubtitleStyle } from '@/components/subtitles/SubtitleStyleEditor';
+import { StylePresets } from '@/components/subtitles/StylePresets';
 import { useVideoStore } from '@/store/useVideoStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Download, Settings, Save, Edit3 } from 'lucide-react';
+import { ArrowLeft, Download, Settings } from 'lucide-react';
 
 export default function VideoEditor() {
   const navigate = useNavigate();
@@ -14,16 +15,37 @@ export default function VideoEditor() {
     currentVideo,
     subtitles,
     setCurrentSubtitle,
-    setSubtitles,
+    updateSubtitle,
+    deleteSubtitle,
+    addSubtitle,
     resetState
   } = useVideoStore();
 
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
-  const [editingSubtitle, setEditingSubtitle] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({
-    startTime: 0,
-    endTime: 0,
-    text: ''
+  const [currentStyle, setCurrentStyle] = useState<SubtitleStyle>({
+    fontFamily: 'Arial',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    backgroundColor: 'transparent',
+    outline: {
+      enabled: true,
+      color: '#000000',
+      width: 2
+    },
+    shadow: {
+      enabled: true,
+      color: 'rgba(0, 0, 0, 0.8)',
+      offsetX: 1,
+      offsetY: 1,
+      blur: 2
+    },
+    position: {
+      horizontal: 'center',
+      vertical: 'bottom',
+      marginX: 20,
+      marginY: 60
+    }
   });
 
   const handleTimeUpdate = (currentTime: number) => {
@@ -35,38 +57,87 @@ export default function VideoEditor() {
     setCurrentSubtitle(subtitle);
   };
 
-  const handleStartEdit = (subtitle: any) => {
-    setEditingSubtitle(subtitle.id);
-    setEditForm({
-      startTime: subtitle.startTime,
-      endTime: subtitle.endTime,
-      text: subtitle.text
+  const handleSeekTo = (time: number) => {
+    videoPlayerRef.current?.seekTo(time);
+  };
+
+  const handleStyleChange = (updates: Partial<SubtitleStyle>) => {
+    setCurrentStyle(prev => ({ ...prev, ...updates }));
+    // Apply style to all subtitles in real-time
+    subtitles.forEach(subtitle => {
+      const styleUpdates: any = {};
+      
+      // Map SubtitleStyle to SubtitleStyles format
+      if (updates.fontFamily) styleUpdates.fontFamily = updates.fontFamily;
+      if (updates.fontSize) styleUpdates.fontSize = updates.fontSize;
+      if (updates.fontWeight) styleUpdates.fontWeight = updates.fontWeight;
+      if (updates.color) styleUpdates.color = updates.color;
+      if (updates.backgroundColor) styleUpdates.backgroundColor = updates.backgroundColor;
+      
+      if (updates.outline) {
+        styleUpdates.outline = {
+          width: updates.outline.enabled ? updates.outline.width : 0,
+          color: updates.outline.color
+        };
+      }
+      
+      if (updates.shadow) {
+        styleUpdates.shadow = {
+          offsetX: updates.shadow.enabled ? updates.shadow.offsetX : 0,
+          offsetY: updates.shadow.enabled ? updates.shadow.offsetY : 0,
+          blur: updates.shadow.enabled ? updates.shadow.blur : 0,
+          color: updates.shadow.color
+        };
+      }
+      
+      if (updates.position) {
+        styleUpdates.position = {
+          horizontal: updates.position.horizontal,
+          vertical: updates.position.vertical === 'middle' ? 'center' : updates.position.vertical,
+          marginX: updates.position.marginX,
+          marginY: updates.position.marginY
+        };
+      }
+      
+      updateSubtitle(subtitle.id, {
+        styles: {
+          ...subtitle.styles,
+          ...styleUpdates
+        }
+      });
     });
   };
 
-  const handleSaveEdit = () => {
-    if (!editingSubtitle) return;
-    
-    const updatedSubtitles = subtitles.map(subtitle => 
-      subtitle.id === editingSubtitle 
-        ? { ...subtitle, ...editForm }
-        : subtitle
-    );
-    
-    setSubtitles(updatedSubtitles);
-    setEditingSubtitle(null);
-    setEditForm({ startTime: 0, endTime: 0, text: '' });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingSubtitle(null);
-    setEditForm({ startTime: 0, endTime: 0, text: '' });
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const handlePresetApply = (preset: any) => {
+    setCurrentStyle(preset.style);
+    // Apply preset to all subtitles
+    subtitles.forEach(subtitle => {
+      const mappedStyle = {
+        fontFamily: preset.style.fontFamily,
+        fontSize: preset.style.fontSize,
+        fontWeight: preset.style.fontWeight,
+        color: preset.style.color,
+        backgroundColor: preset.style.backgroundColor,
+        outline: {
+          width: preset.style.outline.enabled ? preset.style.outline.width : 0,
+          color: preset.style.outline.color
+        },
+        shadow: {
+          offsetX: preset.style.shadow.enabled ? preset.style.shadow.offsetX : 0,
+          offsetY: preset.style.shadow.enabled ? preset.style.shadow.offsetY : 0,
+          blur: preset.style.shadow.enabled ? preset.style.shadow.blur : 0,
+          color: preset.style.shadow.color
+        },
+        position: {
+          horizontal: preset.style.position.horizontal,
+          vertical: preset.style.position.vertical === 'middle' ? 'center' : preset.style.position.vertical,
+          marginX: preset.style.position.marginX,
+          marginY: preset.style.position.marginY
+        }
+      };
+      
+      updateSubtitle(subtitle.id, { styles: mappedStyle });
+    });
   };
 
   const handleBackToUpload = () => {
@@ -134,112 +205,13 @@ export default function VideoEditor() {
           
           {/* Subtitle Text Editor Panel */}
           <div className="lg:col-span-3 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Subtitle Editor</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  {subtitles.length} subtitles loaded
-                </div>
-                
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {subtitles.map((subtitle, index) => (
-                    <div
-                      key={subtitle.id}
-                      className="p-3 rounded-lg border bg-card transition-colors"
-                    >
-                      {editingSubtitle === subtitle.id ? (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-xs font-medium text-muted-foreground">Start Time (s)</label>
-                              <Input
-                                type="number"
-                                step="0.1"
-                                value={editForm.startTime}
-                                onChange={(e) => setEditForm(prev => ({ 
-                                  ...prev, 
-                                  startTime: parseFloat(e.target.value) || 0 
-                                }))}
-                                className="text-xs"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs font-medium text-muted-foreground">End Time (s)</label>
-                              <Input
-                                type="number"
-                                step="0.1"
-                                value={editForm.endTime}
-                                onChange={(e) => setEditForm(prev => ({ 
-                                  ...prev, 
-                                  endTime: parseFloat(e.target.value) || 0 
-                                }))}
-                                className="text-xs"
-                              />
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground">Text</label>
-                            <Textarea
-                              value={editForm.text}
-                              onChange={(e) => setEditForm(prev => ({ 
-                                ...prev, 
-                                text: e.target.value 
-                              }))}
-                              className="text-sm min-h-[60px]"
-                              placeholder="Enter subtitle text..."
-                            />
-                          </div>
-
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={handleSaveEdit}>
-                              <Save className="w-3 h-3 mr-1" />
-                              Save
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs text-muted-foreground">
-                              {formatTime(subtitle.startTime)} - {formatTime(subtitle.endTime)}
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleStartEdit(subtitle)}
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          
-                          <div 
-                            className="text-sm cursor-pointer hover:bg-accent/50 p-2 rounded transition-colors"
-                            onClick={() => {
-                              videoPlayerRef.current?.seekTo(subtitle.startTime);
-                            }}
-                          >
-                            {subtitle.text}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {subtitles.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No subtitles available yet</p>
-                    <p className="text-xs mt-1">Processing may still be in progress</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <SubtitleTextEditor
+              subtitles={subtitles}
+              onSubtitleUpdate={updateSubtitle}
+              onSubtitleDelete={deleteSubtitle}
+              onSubtitleAdd={addSubtitle}
+              onSeekTo={handleSeekTo}
+            />
           </div>
 
           {/* Video Player - Center */}
@@ -265,38 +237,13 @@ export default function VideoEditor() {
 
           {/* Style Controls Panel */}
           <div className="lg:col-span-3 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Style Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  Style editing controls will be implemented in Phase 3
-                </div>
-                
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium">Font Size</label>
-                    <div className="mt-1 text-xs text-muted-foreground">Coming soon</div>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium">Font Color</label>
-                    <div className="mt-1 text-xs text-muted-foreground">Coming soon</div>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium">Position</label>
-                    <div className="mt-1 text-xs text-muted-foreground">Coming soon</div>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium">Style Presets</label>
-                    <div className="mt-1 text-xs text-muted-foreground">Coming soon</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <SubtitleStyleEditor
+              style={currentStyle}
+              onStyleChange={handleStyleChange}
+              onPresetApply={handlePresetApply}
+            />
+            
+            <StylePresets onPresetApply={handlePresetApply} />
 
             {/* Export Options */}
             <Card>
