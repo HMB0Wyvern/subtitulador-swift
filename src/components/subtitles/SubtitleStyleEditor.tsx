@@ -83,15 +83,26 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
           </div>
           
           <div>
-            <Label className="text-xs">Font Size: {style.fontSize}px</Label>
-            <Slider
-              value={[style.fontSize]}
-              onValueChange={([value]) => onStyleChange({ fontSize: value })}
-              min={8}
-              max={96}
-              step={0.1}
-              className="mt-2"
-            />
+            <Label className="text-xs">Font Size</Label>
+            <div className="flex items-center gap-3 mt-2">
+              <Slider
+                value={[style.fontSize]}
+                onValueChange={([value]) => onStyleChange({ fontSize: value })}
+                min={8}
+                max={96}
+                step={0.1}
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                step="0.1"
+                min={8}
+                max={96}
+                value={style.fontSize}
+                onChange={(e)=> onStyleChange({ fontSize: parseFloat(e.target.value) || 0 })}
+                className="w-20 h-9"
+              />
+            </div>
           </div>
           
           <div>
@@ -172,17 +183,28 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
               </div>
               
               <div>
-                <Label className="text-xs">Width: {style.outline.width}px</Label>
-                <Slider
-                  value={[style.outline.width]}
-                  onValueChange={([value]) => onStyleChange({
-                    outline: { ...style.outline, width: value }
-                  })}
-                  min={0}
-                  max={10}
-                  step={0.1}
-                  className="mt-2"
-                />
+                <Label className="text-xs">Outline Width</Label>
+                <div className="flex items-center gap-3 mt-2">
+                  <Slider
+                    value={[style.outline.width]}
+                    onValueChange={([value]) => onStyleChange({
+                      outline: { ...style.outline, width: value }
+                    })}
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    max={10}
+                    value={style.outline.width}
+                    onChange={(e)=> onStyleChange({ outline: { ...style.outline, width: parseFloat(e.target.value) || 0 } })}
+                    className="w-20 h-9"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -221,46 +243,79 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Offset X: {style.shadow.offsetX}px</Label>
-                  <Slider
-                    value={[style.shadow.offsetX]}
-                    onValueChange={([value]) => onStyleChange({
-                      shadow: { ...style.shadow, offsetX: value }
-                    })}
-                    min={-50}
-                    max={50}
-                    step={0.1}
-                    className="mt-2"
-                  />
+                  <Label className="text-xs">Offset X</Label>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Slider
+                      value={[style.shadow.offsetX]}
+                      onValueChange={([value]) => onStyleChange({
+                        shadow: { ...style.shadow, offsetX: value }
+                      })}
+                      min={-50}
+                      max={50}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min={-50}
+                      max={50}
+                      value={style.shadow.offsetX}
+                      onChange={(e)=> onStyleChange({ shadow: { ...style.shadow, offsetX: parseFloat(e.target.value) || 0 } })}
+                      className="w-20 h-9"
+                    />
+                  </div>
                 </div>
                 
                 <div>
-                  <Label className="text-xs">Offset Y: {style.shadow.offsetY}px</Label>
-                  <Slider
-                    value={[style.shadow.offsetY]}
-                    onValueChange={([value]) => onStyleChange({
-                      shadow: { ...style.shadow, offsetY: value }
-                    })}
-                    min={-50}
-                    max={50}
-                    step={0.1}
-                    className="mt-2"
-                  />
+                  <Label className="text-xs">Offset Y</Label>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Slider
+                      value={[style.shadow.offsetY]}
+                      onValueChange={([value]) => onStyleChange({
+                        shadow: { ...style.shadow, offsetY: value }
+                      })}
+                      min={-50}
+                      max={50}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min={-50}
+                      max={50}
+                      value={style.shadow.offsetY}
+                      onChange={(e)=> onStyleChange({ shadow: { ...style.shadow, offsetY: parseFloat(e.target.value) || 0 } })}
+                      className="w-20 h-9"
+                    />
+                  </div>
                 </div>
               </div>
               
               <div>
-                <Label className="text-xs">Blur: {style.shadow.blur}px</Label>
-                <Slider
-                  value={[style.shadow.blur]}
-                  onValueChange={([value]) => onStyleChange({
-                    shadow: { ...style.shadow, blur: value }
-                  })}
-                  min={0}
-                  max={50}
-                  step={0.1}
-                  className="mt-2"
-                />
+                <Label className="text-xs">Blur</Label>
+                <div className="flex items-center gap-3 mt-2">
+                  <Slider
+                    value={[style.shadow.blur]}
+                    onValueChange={([value]) => onStyleChange({
+                      shadow: { ...style.shadow, blur: value }
+                    })}
+                    min={0}
+                    max={50}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    max={50}
+                    value={style.shadow.blur}
+                    onChange={(e)=> onStyleChange({ shadow: { ...style.shadow, blur: parseFloat(e.target.value) || 0 } })}
+                    className="w-20 h-9"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -314,31 +369,53 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs">Margin X: {style.position.marginX}px</Label>
-              <Slider
-                value={[style.position.marginX]}
-                onValueChange={([value]) => onStyleChange({
-                  position: { ...style.position, marginX: value }
-                })}
-                min={0}
-                max={200}
-                step={0.5}
-                className="mt-2"
-              />
+              <Label className="text-xs">Margin X</Label>
+              <div className="flex items-center gap-3 mt-2">
+                <Slider
+                  value={[style.position.marginX]}
+                  onValueChange={([value]) => onStyleChange({
+                    position: { ...style.position, marginX: value }
+                  })}
+                  min={0}
+                  max={200}
+                  step={0.5}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  step="0.5"
+                  min={0}
+                  max={200}
+                  value={style.position.marginX}
+                  onChange={(e)=> onStyleChange({ position: { ...style.position, marginX: parseFloat(e.target.value) || 0 } })}
+                  className="w-20 h-9"
+                />
+              </div>
             </div>
             
             <div>
-              <Label className="text-xs">Margin Y: {style.position.marginY}px</Label>
-              <Slider
-                value={[style.position.marginY]}
-                onValueChange={([value]) => onStyleChange({
-                  position: { ...style.position, marginY: value }
-                })}
-                min={0}
-                max={200}
-                step={0.5}
-                className="mt-2"
-              />
+              <Label className="text-xs">Margin Y</Label>
+              <div className="flex items-center gap-3 mt-2">
+                <Slider
+                  value={[style.position.marginY]}
+                  onValueChange={([value]) => onStyleChange({
+                    position: { ...style.position, marginY: value }
+                  })}
+                  min={0}
+                  max={200}
+                  step={0.5}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  step="0.5"
+                  min={0}
+                  max={200}
+                  value={style.position.marginY}
+                  onChange={(e)=> onStyleChange({ position: { ...style.position, marginY: parseFloat(e.target.value) || 0 } })}
+                  className="w-20 h-9"
+                />
+              </div>
             </div>
           </div>
         </div>
