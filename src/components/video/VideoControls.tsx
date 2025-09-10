@@ -98,11 +98,11 @@ export function VideoControls({
 
   // Skip forward/backward
   const skipBackward = () => {
-    onSeek(Math.max(0, currentTime - 10));
+    onSeek(Math.max(0, currentTime - 3));
   };
 
   const skipForward = () => {
-    onSeek(Math.min(duration, currentTime + 10));
+    onSeek(Math.min(duration, currentTime + 3));
   };
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
