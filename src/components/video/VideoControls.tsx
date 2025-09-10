@@ -118,23 +118,23 @@ export function VideoControls({
     >
       <div className="p-4 space-y-2">
         {/* Progress Bar */}
-        <div className="space-y-1">
-          <Slider
-            value={[progressPercentage]}
-            max={100}
-            step={0.1}
-            className="w-full cursor-pointer"
-            onValueChange={handleProgressChange}
-            onValueCommit={handleProgressEnd}
-            onPointerDown={handleProgressStart}
-          />
-          
-          {/* Time Display */}
-          <div className="flex justify-between items-center text-xs text-white/80">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
+        {showProgress && (
+          <div className="space-y-1">
+            <Slider
+              value={[progressPercentage]}
+              max={100}
+              step={0.1}
+              className="w-full cursor-pointer"
+              onValueChange={handleProgressChange}
+              onValueCommit={handleProgressEnd}
+              onPointerDown={handleProgressStart}
+            />
+            <div className="flex justify-between items-center text-xs text-white/80">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Controls */}
         <div className="flex items-center justify-between">
