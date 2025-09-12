@@ -388,7 +388,7 @@ export default function VideoEditor() {
               <Button
                 variant={openPanel === 'choose' ? 'default' : 'outline'}
                 className="w-full justify-start"
-                onClick={() => setOpenPanel(p => (p === 'choose' ? null : 'choose'))}
+                onClick={() => guardedSetOpenPanel(openPanel === 'choose' ? null : 'choose')}
               >
                 <Palette className="w-4 h-4 mr-2" /> Elegir estilos
               </Button>
