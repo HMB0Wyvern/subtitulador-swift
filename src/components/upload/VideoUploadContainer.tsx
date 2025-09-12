@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, ArrowLeft } from 'lucide-react';
 import { videoApiService } from '@/services/api';
+import { useToast } from '@/components/ui/use-toast';
+import { subtitlesToSRT, subtitlesToASS, triggerDownload } from '@/utils/subtitleExport';
 
 export function VideoUploadContainer() {
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ export function VideoUploadContainer() {
   } = useVideoStore();
 
   const [error, setError] = useState<string | null>(null);
+  const { exportPreferences, setExportPreferences } = useVideoStore();
+  const { toast } = useToast();
 
   // Handle file upload with Spring Boot API integration
   const handleFileSelect = useCallback(async (file: File) => {
@@ -102,8 +106,30 @@ export function VideoUploadContainer() {
         const subtitleResponse = await videoApiService.getSubtitles(videoId);
         if (subtitleResponse.success && subtitleResponse.data) {
           // Update store with subtitle data for the video player
-          const { setSubtitles } = useVideoStore.getState();
+          const { setSubtitles, currentVideo: cv } = useVideoStore.getState();
           setSubtitles(subtitleResponse.data);
+
+          // Auto-download exports if enabled
+          if (exportPreferences.autoDownloadOnComplete) {
+            try {
+              const base = (cv?.name?.split('.').slice(0, -1).join('.') || 'subtitles');
+              if (exportPreferences.formats.srt) {
+                const srt = subtitlesToSRT(subtitleResponse.data);
+                triggerDownload(`${base}.srt`, srt, 'text/plain;charset=utf-8');
+              }
+              if (exportPreferences.formats.ass) {
+                const ass = subtitlesToASS(subtitleResponse.data);
+                triggerDownload(`${base}.ass`, ass, 'text/plain;charset=utf-8');
+              }
+              if (exportPreferences.formats.json) {
+                const json = JSON.stringify(subtitleResponse.data, null, 2);
+                triggerDownload(`${base}.json`, json, 'application/json;charset=utf-8');
+              }
+              toast({ title: 'Descargas iniciadas', description: 'Subtítulos exportados automáticamente.' });
+            } catch (e) {
+              toast({ title: 'Error al descargar', description: e instanceof Error ? e.message : 'Fallo exportando archivos' });
+            }
+          }
         }
         return;
       }
@@ -137,7 +163,46 @@ export function VideoUploadContainer() {
     return (
       <div className="w-full max-w-4xl mx-auto space-y-6">
         <ProgressIndicator />
-        
+
+        {/* Export Preferences */}
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="text-lg">Export Preferences</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={exportPreferences.formats.srt} onChange={(e)=>setExportPreferences({ formats: { srt: e.target.checked } as any })} />
+                .srt
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={exportPreferences.formats.ass} onChange={(e)=>setExportPreferences({ formats: { ass: e.target.checked } as any })} />
+                .ass
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={exportPreferences.formats.json} onChange={(e)=>setExportPreferences({ formats: { json: e.target.checked } as any })} />
+                .json
+              </label>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <span>Auto-descargar al completar</span>
+              <input type="checkbox" checked={exportPreferences.autoDownloadOnComplete} onChange={(e)=>setExportPreferences({ autoDownloadOnComplete: e.target.checked })} />
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <span>Calidad</span>
+              <select
+                className="h-9 rounded-md border border-input bg-background px-2"
+                value={exportPreferences.quality}
+                onChange={(e)=> setExportPreferences({ quality: e.target.value as any })}
+              >
+                <option value="low">Baja</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+              </select>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Action Buttons */}
         <div className="flex justify-center gap-3">
           {uploadProgress.status === 'error' && (

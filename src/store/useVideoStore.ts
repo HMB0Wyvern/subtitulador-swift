@@ -27,6 +27,13 @@ export interface ProcessingStatus {
   message: string;
 }
 
+type ExportQuality = 'low' | 'medium' | 'high';
+interface ExportPreferences {
+  autoDownloadOnComplete: boolean;
+  formats: { srt: boolean; ass: boolean; json: boolean };
+  quality: ExportQuality;
+}
+
 interface VideoState {
   // Current video being processed
   currentVideo: VideoFile | null;
@@ -44,7 +51,10 @@ interface VideoState {
   // UI state
   isUploading: boolean;
   isDragOver: boolean;
-  
+
+  // Export preferences
+  exportPreferences: ExportPreferences;
+
   // Actions
   setCurrentVideo: (video: VideoFile | null) => void;
   setUploadProgress: (progress: UploadProgress | null) => void;
@@ -53,7 +63,9 @@ interface VideoState {
   setCurrentSubtitle: (subtitle: SubtitleData | null) => void;
   setIsUploading: (uploading: boolean) => void;
   setIsDragOver: (dragOver: boolean) => void;
-  
+
+  setExportPreferences: (prefs: Partial<ExportPreferences>) => void;
+
   // Subtitle editing actions
   updateSubtitle: (id: string, updates: Partial<SubtitleData>) => void;
   deleteSubtitle: (id: string) => void;
@@ -73,6 +85,12 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   isUploading: false,
   isDragOver: false,
 
+  exportPreferences: {
+    autoDownloadOnComplete: true,
+    formats: { srt: true, ass: false, json: false },
+    quality: 'medium',
+  },
+
   setCurrentVideo: (video) => set({ currentVideo: video }),
   
   setUploadProgress: (progress) => set({ uploadProgress: progress }),
@@ -86,7 +104,15 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   setIsUploading: (uploading) => set({ isUploading: uploading }),
   
   setIsDragOver: (dragOver) => set({ isDragOver: dragOver }),
-  
+
+  setExportPreferences: (prefs) => set((state) => ({
+    exportPreferences: {
+      ...state.exportPreferences,
+      ...prefs,
+      formats: { ...state.exportPreferences.formats, ...(prefs.formats || {}) },
+    },
+  })),
+
   // Subtitle editing actions
   updateSubtitle: (id, updates) => set((state) => ({
     subtitles: state.subtitles.map(subtitle =>
@@ -122,23 +148,51 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         marginY: 60
       }
     };
-    
-    const newSubtitle: SubtitleData = {
+
+    const makeSub = (start: number, end: number): SubtitleData => ({
       id: `subtitle_${Date.now()}`,
-      startTime: 0,
-      endTime: 5,
+      startTime: Math.max(0, start),
+      endTime: Math.max(Math.max(0, start), end),
       text: 'New subtitle',
       styles: defaultStyles
-    };
-    
-    if (!afterId) {
-      return { subtitles: [newSubtitle, ...state.subtitles] };
+    });
+
+    const subs = state.subtitles;
+
+    // If no reference, append at the end with 0.1s duration
+    if (!afterId || subs.length === 0) {
+      const lastEnd = subs.length ? subs[subs.length - 1].endTime : 0;
+      const start = lastEnd;
+      const end = start + 0.1;
+      return { subtitles: [...subs, makeSub(start, end)] };
     }
-    
-    const index = state.subtitles.findIndex(s => s.id === afterId);
-    const newSubtitles = [...state.subtitles];
+
+    const index = subs.findIndex((s) => s.id === afterId);
+    const prev = subs[index];
+    const next = subs[index + 1];
+
+    // Default placement: start at previous end, 0.1s long
+    let start = prev.endTime;
+    let end = start + 0.1;
+
+    // Validate against next subtitle to prevent overlap
+    if (next) {
+      // Clamp end to not exceed next.startTime
+      if (end > next.startTime) {
+        end = Math.max(start, next.startTime);
+      }
+
+      // If there's no room between prev.end and next.start, place at the end of the list
+      if (end <= start) {
+        const last = subs[subs.length - 1];
+        start = last.endTime;
+        end = start + 0.1;
+      }
+    }
+
+    const newSubtitle = makeSub(start, end);
+    const newSubtitles = [...subs];
     newSubtitles.splice(index + 1, 0, newSubtitle);
-    
     return { subtitles: newSubtitles };
   }),
   

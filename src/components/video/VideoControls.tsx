@@ -24,6 +24,7 @@ export interface VideoControlsProps {
   onVolumeChange: (volume: number) => void;
   onMute: () => void;
   onFullscreen: () => void;
+  showProgress?: boolean;
 }
 
 export function VideoControls({
@@ -37,7 +38,8 @@ export function VideoControls({
   onSeek,
   onVolumeChange,
   onMute,
-  onFullscreen
+  onFullscreen,
+  showProgress = true,
 }: VideoControlsProps) {
   const [showControls, setShowControls] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
@@ -96,11 +98,11 @@ export function VideoControls({
 
   // Skip forward/backward
   const skipBackward = () => {
-    onSeek(Math.max(0, currentTime - 10));
+    onSeek(Math.max(0, currentTime - 3));
   };
 
   const skipForward = () => {
-    onSeek(Math.min(duration, currentTime + 10));
+    onSeek(Math.min(duration, currentTime + 3));
   };
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -116,23 +118,23 @@ export function VideoControls({
     >
       <div className="p-4 space-y-2">
         {/* Progress Bar */}
-        <div className="space-y-1">
-          <Slider
-            value={[progressPercentage]}
-            max={100}
-            step={0.1}
-            className="w-full cursor-pointer"
-            onValueChange={handleProgressChange}
-            onValueCommit={handleProgressEnd}
-            onPointerDown={handleProgressStart}
-          />
-          
-          {/* Time Display */}
-          <div className="flex justify-between items-center text-xs text-white/80">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
+        {showProgress && (
+          <div className="space-y-1">
+            <Slider
+              value={[progressPercentage]}
+              max={100}
+              step={0.1}
+              className="w-full cursor-pointer"
+              onValueChange={handleProgressChange}
+              onValueCommit={handleProgressEnd}
+              onPointerDown={handleProgressStart}
+            />
+            <div className="flex justify-between items-center text-xs text-white/80">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Controls */}
         <div className="flex items-center justify-between">
