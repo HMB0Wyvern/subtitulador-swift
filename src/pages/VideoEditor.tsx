@@ -349,23 +349,37 @@ export default function VideoEditor() {
 
           {/* Video Player - Center */}
           <div className="lg:col-span-6">
-            <VideoPlayer
-              ref={videoPlayerRef}
-              videoUrl={currentVideo.url || ''}
-              subtitles={subtitles}
-              onTimeUpdate={handleTimeUpdate}
-              onSubtitleSelect={handleSubtitleSelect}
-              className="w-full"
-            />
-            
-            {/* Timeline/Progress Info */}
-            <Card className="mt-4">
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">
-                  Video: {currentVideo.name} ({Math.round(currentVideo.size / 1024 / 1024 * 100) / 100} MB)
-                </div>
-              </CardContent>
-            </Card>
+            <div className="w-full flex justify-center">
+              <div style={{ width: playerWidth ? `${playerWidth}px` : '70vw' }}>
+                <VideoPlayer
+                  ref={videoPlayerRef}
+                  videoUrl={currentVideo.url || ''}
+                  subtitles={subtitles}
+                  onTimeUpdate={onTimeUpdate}
+                  onPlayStateChange={onPlayStateChange}
+                  onVolumeStateChange={onVolumeStateChange}
+                  onDuration={onDuration}
+                  onNaturalSize={onNaturalSize}
+                  onSubtitleSelect={handleSubtitleSelect}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            <div className="mt-3">
+              <VideoControlBar
+                isPlaying={isPlaying}
+                currentTime={currentTime}
+                duration={duration}
+                volume={volume}
+                isMuted={isMuted}
+                isFullscreen={isFullscreen}
+                onPlayPause={() => (isPlaying ? videoPlayerRef.current?.pause() : videoPlayerRef.current?.play())}
+                onSeek={(t) => videoPlayerRef.current?.seekTo(t)}
+                onVolumeChange={(v) => videoPlayerRef.current?.setVolume(v)}
+                onMute={() => videoPlayerRef.current?.toggleMute()}
+                onToggleFullscreen={() => videoPlayerRef.current?.toggleFullscreen()}
+              />
+            </div>
           </div>
 
           {/* Style Controls Panel */}
