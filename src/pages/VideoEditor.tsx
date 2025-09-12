@@ -164,34 +164,7 @@ export default function VideoEditor() {
 
   const handlePresetApply = (preset: any) => {
     setCurrentStyle(preset.style);
-    // Apply preset to all subtitles
-    subtitles.forEach(subtitle => {
-      const mappedStyle = {
-        fontFamily: preset.style.fontFamily,
-        fontSize: preset.style.fontSize,
-        fontWeight: preset.style.fontWeight,
-        color: preset.style.color,
-        backgroundColor: preset.style.backgroundColor,
-        outline: {
-          width: preset.style.outline.enabled ? preset.style.outline.width : 0,
-          color: preset.style.outline.color
-        },
-        shadow: {
-          offsetX: preset.style.shadow.enabled ? preset.style.shadow.offsetX : 0,
-          offsetY: preset.style.shadow.enabled ? preset.style.shadow.offsetY : 0,
-          blur: preset.style.shadow.enabled ? preset.style.shadow.blur : 0,
-          color: preset.style.shadow.color
-        },
-        position: {
-          horizontal: preset.style.position.horizontal,
-          vertical: preset.style.position.vertical === 'middle' ? 'center' : preset.style.position.vertical,
-          marginX: preset.style.position.marginX,
-          marginY: preset.style.position.marginY
-        }
-      };
-      
-      updateSubtitle(subtitle.id, { styles: mappedStyle });
-    });
+    applyStyleToAll(preset.style);
   };
 
   const handleBackToUpload = () => {
