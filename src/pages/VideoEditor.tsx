@@ -106,50 +106,59 @@ export default function VideoEditor() {
     videoPlayerRef.current?.seekTo(time);
   };
 
+  const hexToRgba = (hex: string, opacity: number) => {
+    const c = hex.replace('#','');
+    const r = parseInt(c.length === 3 ? c[0]+c[0] : c.slice(0,2), 16);
+    const g = parseInt(c.length === 3 ? c[1]+c[1] : c.slice(2,4), 16);
+    const b = parseInt(c.length === 3 ? c[2]+c[2] : c.slice(4,6), 16);
+    const a = Math.max(0, Math.min(100, opacity)) / 100;
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  };
+
+  const applyStyleToAll = (style: SubtitleStyle) => {
+    subtitles.forEach((subtitle) => {
+      const mapped: any = {
+        fontFamily: style.fontFamily,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        color: hexToRgba(style.color, style.colorOpacity ?? 100),
+        backgroundColor: style.backgroundEnabled ? hexToRgba(style.backgroundColor || '#000000', style.backgroundOpacity ?? 100) : 'transparent',
+        outline: {
+          width: style.outline.enabled ? style.outline.width : 0,
+          color: hexToRgba(style.outline.color, style.outline.opacity ?? 100)
+        },
+        shadow: {
+          offsetX: style.shadow.enabled ? style.shadow.offsetX : 0,
+          offsetY: style.shadow.enabled ? style.shadow.offsetY : 0,
+          blur: style.shadow.enabled ? style.shadow.blur : 0,
+          color: hexToRgba(style.shadow.color, style.shadow.opacity ?? 100)
+        },
+        position: {
+          horizontal: style.position.horizontal,
+          vertical: style.position.vertical === 'middle' ? 'center' : style.position.vertical,
+          marginX: style.position.marginX,
+          marginY: style.position.marginY
+        },
+        backgroundPadding: style.backgroundPadding,
+        backgroundRadius: style.backgroundRadius,
+      };
+
+      updateSubtitle(subtitle.id, { styles: { ...subtitle.styles, ...mapped } as any });
+    });
+  };
+
   const handleStyleChange = (updates: Partial<SubtitleStyle>) => {
-    setCurrentStyle(prev => ({ ...prev, ...updates }));
-    // Apply style to all subtitles in real-time
-    subtitles.forEach(subtitle => {
-      const styleUpdates: any = {};
-      
-      // Map SubtitleStyle to SubtitleStyles format
-      if (updates.fontFamily) styleUpdates.fontFamily = updates.fontFamily;
-      if (updates.fontSize) styleUpdates.fontSize = updates.fontSize;
-      if (updates.fontWeight) styleUpdates.fontWeight = updates.fontWeight;
-      if (updates.color) styleUpdates.color = updates.color;
-      if (updates.backgroundColor) styleUpdates.backgroundColor = updates.backgroundColor;
-      
-      if (updates.outline) {
-        styleUpdates.outline = {
-          width: updates.outline.enabled ? updates.outline.width : 0,
-          color: updates.outline.color
-        };
-      }
-      
-      if (updates.shadow) {
-        styleUpdates.shadow = {
-          offsetX: updates.shadow.enabled ? updates.shadow.offsetX : 0,
-          offsetY: updates.shadow.enabled ? updates.shadow.offsetY : 0,
-          blur: updates.shadow.enabled ? updates.shadow.blur : 0,
-          color: updates.shadow.color
-        };
-      }
-      
-      if (updates.position) {
-        styleUpdates.position = {
-          horizontal: updates.position.horizontal,
-          vertical: updates.position.vertical === 'middle' ? 'center' : updates.position.vertical,
-          marginX: updates.position.marginX,
-          marginY: updates.position.marginY
-        };
-      }
-      
-      updateSubtitle(subtitle.id, {
-        styles: {
-          ...subtitle.styles,
-          ...styleUpdates
-        }
-      });
+    setCurrentStyle((prev) => {
+      const next: SubtitleStyle = {
+        ...prev,
+        ...updates,
+        outline: { ...prev.outline, ...(updates.outline || {}) },
+        shadow: { ...prev.shadow, ...(updates.shadow || {}) },
+        position: { ...prev.position, ...(updates.position || {}) },
+        backgroundPadding: updates.backgroundPadding || prev.backgroundPadding,
+      } as SubtitleStyle;
+      applyStyleToAll(next);
+      return next;
     });
   };
 
