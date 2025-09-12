@@ -454,6 +454,44 @@ export default function VideoEditor() {
           </div>
         </div>
       </div>
+      <AlertDialog open={confirmLeaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tienes cambios sin guardar</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Deseas guardar los cambios del estilo antes de salir?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setConfirmLeaveOpen(false); setPendingPanel(null); }}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (editingStyleId) {
+                const idx = customStyles.findIndex((s) => s.id === editingStyleId);
+                if (idx !== -1) {
+                  const next = [...customStyles];
+                  next[idx] = { ...next[idx], style: currentStyle };
+                  setCustomStyles(next);
+                  localStorage.setItem('customStyles', JSON.stringify(next));
+                  setOriginalEditingStyle(currentStyle);
+                  toast({ title: 'Estilo guardado', description: 'Los cambios han sido guardados.' });
+                }
+              }
+              setConfirmLeaveOpen(false);
+              setOpenPanel(pendingPanel);
+              setPendingPanel(null);
+            }}>Guardar</AlertDialogAction>
+            <AlertDialogAction onClick={() => {
+              if (originalEditingStyle) {
+                setCurrentStyle(originalEditingStyle);
+                applyStyleToAll(originalEditingStyle);
+              }
+              setConfirmLeaveOpen(false);
+              setOpenPanel(pendingPanel);
+              setPendingPanel(null);
+            }}>Descartar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
