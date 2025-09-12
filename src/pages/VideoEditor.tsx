@@ -395,7 +395,7 @@ export default function VideoEditor() {
               <Button
                 variant={openPanel === 'modify' ? 'default' : 'outline'}
                 className="w-full justify-start"
-                onClick={() => setOpenPanel(p => (p === 'modify' ? null : 'modify'))}
+                onClick={() => guardedSetOpenPanel(openPanel === 'modify' ? null : 'modify')}
               >
                 <Pencil className="w-4 h-4 mr-2" /> Modificar estilo
               </Button>
