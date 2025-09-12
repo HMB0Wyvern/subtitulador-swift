@@ -55,12 +55,23 @@ export class ASSToCSSConverter {
     // Generate text shadow for outline and shadow effects
     const textShadow = this.generateTextShadow(outline, shadow);
 
+    const extra: any = {};
+    const anyStyles = styles as any;
+    if (anyStyles.backgroundPadding && this.normalizeColor(backgroundColor) !== 'transparent') {
+      const p = anyStyles.backgroundPadding;
+      extra.padding = `${p.top || 0}px ${p.right || 0}px ${p.bottom || 0}px ${p.left || 0}px`;
+    }
+    if (typeof anyStyles.backgroundRadius === 'number' && this.normalizeColor(backgroundColor) !== 'transparent') {
+      extra.borderRadius = `${anyStyles.backgroundRadius}px`;
+    }
+
     return {
       fontFamily,
       fontSize: `${fontSize}px`,
       fontWeight,
       color: this.normalizeColor(color),
       backgroundColor: this.normalizeColor(backgroundColor),
+      ...extra,
       textShadow,
       webkitTextStroke: `${outline.width}px ${this.normalizeColor(outline.color)}`,
       position: 'absolute',
