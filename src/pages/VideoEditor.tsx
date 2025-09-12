@@ -63,10 +63,40 @@ export default function VideoEditor() {
     }
   });
 
-  const handleTimeUpdate = (currentTime: number) => {
-    // Handle time updates for synchronization
-    console.log('Current time:', currentTime);
-  };
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [naturalSize, setNaturalSize] = useState<{ w: number; h: number } | null>(null);
+  const [playerWidth, setPlayerWidth] = useState<number>(0);
+
+  const computePlayerWidth = useCallback((w: number, h: number) => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const maxW = vw * 0.7;
+    const maxH = vh * 0.7;
+    const ratio = w / h;
+    const widthBasedOnHeight = maxH * ratio;
+    const width = Math.min(maxW, widthBasedOnHeight);
+    setPlayerWidth(width);
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (naturalSize) computePlayerWidth(naturalSize.w, naturalSize.h);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [naturalSize, computePlayerWidth]);
+
+  const onTimeUpdate = (t: number) => setCurrentTime(t);
+  const onPlayStateChange = (p: boolean) => setIsPlaying(p);
+  const onVolumeStateChange = (v: number, m: boolean) => { setVolume(v); setIsMuted(m); };
+  const onDuration = (d: number) => setDuration(d);
+  const onNaturalSize = (w: number, h: number) => { setNaturalSize({ w, h }); computePlayerWidth(w, h); };
 
   const handleSubtitleSelect = (subtitle: any) => {
     setCurrentSubtitle(subtitle);
