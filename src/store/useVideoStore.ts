@@ -148,23 +148,51 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         marginY: 60
       }
     };
-    
-    const newSubtitle: SubtitleData = {
+
+    const makeSub = (start: number, end: number): SubtitleData => ({
       id: `subtitle_${Date.now()}`,
-      startTime: 0,
-      endTime: 5,
+      startTime: Math.max(0, start),
+      endTime: Math.max(Math.max(0, start), end),
       text: 'New subtitle',
       styles: defaultStyles
-    };
-    
-    if (!afterId) {
-      return { subtitles: [newSubtitle, ...state.subtitles] };
+    });
+
+    const subs = state.subtitles;
+
+    // If no reference, append at the end with 0.1s duration
+    if (!afterId || subs.length === 0) {
+      const lastEnd = subs.length ? subs[subs.length - 1].endTime : 0;
+      const start = lastEnd;
+      const end = start + 0.1;
+      return { subtitles: [...subs, makeSub(start, end)] };
     }
-    
-    const index = state.subtitles.findIndex(s => s.id === afterId);
-    const newSubtitles = [...state.subtitles];
+
+    const index = subs.findIndex((s) => s.id === afterId);
+    const prev = subs[index];
+    const next = subs[index + 1];
+
+    // Default placement: start at previous end, 0.1s long
+    let start = prev.endTime;
+    let end = start + 0.1;
+
+    // Validate against next subtitle to prevent overlap
+    if (next) {
+      // Clamp end to not exceed next.startTime
+      if (end > next.startTime) {
+        end = Math.max(start, next.startTime);
+      }
+
+      // If there's no room between prev.end and next.start, place at the end of the list
+      if (end <= start) {
+        const last = subs[subs.length - 1];
+        start = last.endTime;
+        end = start + 0.1;
+      }
+    }
+
+    const newSubtitle = makeSub(start, end);
+    const newSubtitles = [...subs];
     newSubtitles.splice(index + 1, 0, newSubtitle);
-    
     return { subtitles: newSubtitles };
   }),
   
