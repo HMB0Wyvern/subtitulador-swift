@@ -423,8 +423,12 @@ export default function VideoEditor() {
                             {customStyles.map(s => (
                               <div key={s.id} className="flex items-center justify-between rounded-md border p-2">
                                 <div className="text-sm font-medium truncate pr-2">{s.name}</div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 items-center">
+                                  {editingStyleId === s.id && isDirty && (
+                                    <span className="text-xs text-amber-600">Cambios sin guardar</span>
+                                  )}
                                   <Button size="sm" variant="secondary" onClick={() => applyCustomStyle(s)}>Aplicar</Button>
+                                  <Button size="sm" variant="outline" onClick={() => { setEditingStyleId(s.id); setOriginalEditingStyle(s.style); setCurrentStyle(s.style); setOpenPanel('modify'); }}>Editar</Button>
                                   <Button size="sm" variant="ghost" onClick={() => removeCustomStyle(s.id)}>Eliminar</Button>
                                 </div>
                               </div>
