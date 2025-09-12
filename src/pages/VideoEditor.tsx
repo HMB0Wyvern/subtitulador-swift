@@ -98,6 +98,12 @@ export default function VideoEditor() {
   const onDuration = (d: number) => setDuration(d);
   const onNaturalSize = (w: number, h: number) => { setNaturalSize({ w, h }); computePlayerWidth(w, h); };
 
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
   const handleSubtitleSelect = (subtitle: any) => {
     setCurrentSubtitle(subtitle);
   };
