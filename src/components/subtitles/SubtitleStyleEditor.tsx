@@ -12,11 +12,17 @@ export interface SubtitleStyle {
   fontSize: number;
   fontWeight: 'normal' | 'bold';
   color: string;
+  colorOpacity?: number; // 0-100
   backgroundColor?: string;
+  backgroundEnabled?: boolean;
+  backgroundOpacity?: number; // 0-100
+  backgroundPadding?: { top: number; right: number; bottom: number; left: number };
+  backgroundRadius?: number;
   outline: {
     enabled: boolean;
     color: string;
     width: number;
+    opacity?: number; // 0-100
   };
   shadow: {
     enabled: boolean;
@@ -24,6 +30,7 @@ export interface SubtitleStyle {
     offsetX: number;
     offsetY: number;
     blur: number;
+    opacity?: number; // 0-100
   };
   position: {
     horizontal: 'left' | 'center' | 'right';
