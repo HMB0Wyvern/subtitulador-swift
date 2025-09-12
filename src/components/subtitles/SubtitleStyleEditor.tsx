@@ -294,6 +294,29 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
                   />
                 </div>
               </div>
+
+              <div>
+                <Label className="text-xs">Outline Opacity</Label>
+                <div className="flex items-center gap-3 mt-2">
+                  <Slider
+                    value={[style.outline.opacity ?? 100]}
+                    onValueChange={([value]) => onStyleChange({ outline: { ...style.outline, opacity: value } })}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                  />
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={style.outline.opacity ?? 100}
+                    onChange={(e)=> onStyleChange({ outline: { ...style.outline, opacity: Math.max(0, Math.min(100, parseInt(e.target.value || '0', 10))) } })}
+                    className="w-20 h-9"
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>
