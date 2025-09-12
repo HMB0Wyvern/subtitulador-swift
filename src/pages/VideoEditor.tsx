@@ -449,68 +449,6 @@ export default function VideoEditor() {
                     onPresetApply={handlePresetApply}
                   />
                 )}
-
-                {/* Export Options */}
-            <Card className="mt-3">
-              <CardHeader>
-                <CardTitle className="text-lg">Export Options</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={useVideoStore.getState().exportPreferences.formats.srt} onChange={(e)=>useVideoStore.getState().setExportPreferences({ formats: { srt: e.target.checked } as any })} />
-                    .srt
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={useVideoStore.getState().exportPreferences.formats.ass} onChange={(e)=>useVideoStore.getState().setExportPreferences({ formats: { ass: e.target.checked } as any })} />
-                    .ass
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={useVideoStore.getState().exportPreferences.formats.json} onChange={(e)=>useVideoStore.getState().setExportPreferences({ formats: { json: e.target.checked } as any })} />
-                    .json
-                  </label>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <span>Calidad</span>
-                  <select
-                    className="h-9 rounded-md border border-input bg-background px-2"
-                    defaultValue={useVideoStore.getState().exportPreferences.quality}
-                    onChange={(e)=>useVideoStore.getState().setExportPreferences({ quality: e.target.value as any })}
-                  >
-                    <option value="low">Baja</option>
-                    <option value="medium">Media</option>
-                    <option value="high">Alta</option>
-                  </select>
-                </div>
-                <Button
-                  variant="default"
-                  className="w-full"
-                  onClick={() => {
-                    const { currentVideo: cv, exportPreferences } = useVideoStore.getState();
-                    try {
-                      const base = (cv?.name?.split('.').slice(0, -1).join('.') || 'subtitles');
-                      if (exportPreferences.formats.srt) {
-                        const srt = subtitlesToSRT(subtitles);
-                        triggerDownload(`${base}.srt`, srt, 'text/plain;charset=utf-8');
-                      }
-                      if (exportPreferences.formats.ass) {
-                        const ass = subtitlesToASS(subtitles);
-                        triggerDownload(`${base}.ass`, ass, 'text/plain;charset=utf-8');
-                      }
-                      if (exportPreferences.formats.json) {
-                        const json = JSON.stringify(subtitles, null, 2);
-                        triggerDownload(`${base}.json`, json, 'application/json;charset=utf-8');
-                      }
-                      toast({ title: 'Descargas iniciadas', description: 'Subtítulos exportados.' });
-                    } catch (e) {
-                      toast({ title: 'Error al descargar', description: e instanceof Error ? e.message : 'Fallo exportando archivos' });
-                    }
-                  }}
-                >
-                  Descargar ahora
-                </Button>
-              </CardContent>
-            </Card>
               </div>
             </div>
           </div>
