@@ -35,7 +35,12 @@ export default function VideoEditor() {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#ffffff',
-    backgroundColor: 'transparent',
+    colorOpacity: 100,
+    backgroundColor: '#000000',
+    backgroundEnabled: false,
+    backgroundOpacity: 80,
+    backgroundPadding: { top: 4, right: 8, bottom: 4, left: 8 },
+    backgroundRadius: 4,
     outline: {
       enabled: true,
       color: '#000000',
