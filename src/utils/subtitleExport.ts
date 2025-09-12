@@ -1,8 +1,6 @@
 import { SubtitleData } from '@/services/api';
 
 export type ExportFormat = 'srt' | 'ass' | 'json';
-
-export function subtitlesToSRT(subs: SubtitleData[]): string {
   const formatTime = (t: number) => {
     const h = Math.floor(t / 3600);
     const m = Math.floor((t % 3600) / 60);
@@ -17,7 +15,7 @@ export function subtitlesToSRT(subs: SubtitleData[]): string {
     .join('\n');
 }
 
-export function subtitlesToASS(subs: SubtitleData[], opts?: {
+function subtitlesToASS(subs: SubtitleData[], opts?: {
   fontName?: string;
   fontSize?: number;
   primaryColor?: string; // css color
@@ -80,14 +78,46 @@ export function subtitlesToASS(subs: SubtitleData[], opts?: {
   return `${header}\n${events}\n`;
 }
 
-export function triggerDownload(filename: string, content: string, mime = 'text/plain;charset=utf-8') {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+export function exportSubtitles(subtitles: SubtitleData[], format: 'srt' | 'vtt' | 'ass'): Blob {
+  let content: string;
+  let mimeType: string;
+  
+  switch (format) {
+    case 'srt':
+      content = subtitlesToSRT(subtitles);
+      mimeType = 'text/plain;charset=utf-8';
+      break;
+    case 'vtt':
+      content = subtitlesToVTT(subtitles);
+      mimeType = 'text/vtt;charset=utf-8';
+      break;
+    case 'ass':
+      content = subtitlesToASS(subtitles);
+      mimeType = 'text/plain;charset=utf-8';
+      break;
+    default:
+      throw new Error(`Unsupported format: ${format}`);
+  }
+  
+  return new Blob([content], { type: mimeType });
 }
+
+function subtitlesToVTT(subs: SubtitleData[]): string {
+  const formatTime = (t: number) => {
+    const h = Math.floor(t / 3600);
+    const m = Math.floor((t % 3600) / 60);
+    const s = Math.floor(t % 60);
+    const ms = Math.round((t - Math.floor(t)) * 1000);
+    const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+    return `${pad(h)}:${pad(m)}:${pad(s)}.${pad(ms, 3)}`;
+  };
+
+  const header = 'WEBVTT\n\n';
+  const cues = subs
+    .map((s, i) => `${i + 1}\n${formatTime(s.startTime)} --> ${formatTime(s.endTime)}\n${s.text}\n`)
+    .join('\n');
+    
+  return header + cues;
+}
+
+export { subtitlesToSRT, subtitlesToASS, triggerDownload };

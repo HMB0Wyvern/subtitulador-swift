@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { SubtitleData, SubtitleStyles } from '@/services/api';
 
+export type { SubtitleData, SubtitleStyles } from '@/services/api';
+
 export interface VideoFile {
   id: string;
   name: string;
