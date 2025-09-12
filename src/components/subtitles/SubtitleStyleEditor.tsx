@@ -127,7 +127,7 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
         {/* Colors */}
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Colors</h4>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">Text Color</Label>
@@ -137,16 +137,104 @@ export function SubtitleStyleEditor({ style, onStyleChange, onPresetApply }: Sub
                 onChange={(e) => onStyleChange({ color: e.target.value })}
                 className="h-10"
               />
+              <div className="mt-2">
+                <Label className="text-xs">Text Opacity</Label>
+                <div className="flex items-center gap-3 mt-2">
+                  <Slider
+                    value={[style.colorOpacity ?? 100]}
+                    onValueChange={([v]) => onStyleChange({ colorOpacity: v })}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                  />
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={style.colorOpacity ?? 100}
+                    onChange={(e)=> onStyleChange({ colorOpacity: Math.max(0, Math.min(100, parseInt(e.target.value || '0', 10))) })}
+                    className="w-20 h-9"
+                  />
+                </div>
+              </div>
             </div>
-            
+
             <div>
-              <Label className="text-xs">Background Color</Label>
-              <Input
-                type="color"
-                value={style.backgroundColor || '#000000'}
-                onChange={(e) => onStyleChange({ backgroundColor: e.target.value })}
-                className="h-10"
-              />
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Background</Label>
+                <Button
+                  size="sm"
+                  variant={style.backgroundEnabled ? 'default' : 'outline'}
+                  onClick={() => onStyleChange({ backgroundEnabled: !style.backgroundEnabled })}
+                >
+                  {style.backgroundEnabled ? 'Enabled' : 'Disabled'}
+                </Button>
+              </div>
+              {style.backgroundEnabled && (
+                <>
+                  <Input
+                    type="color"
+                    value={style.backgroundColor || '#000000'}
+                    onChange={(e) => onStyleChange({ backgroundColor: e.target.value })}
+                    className="h-10 mt-2"
+                  />
+                  <div className="mt-2">
+                    <Label className="text-xs">Background Opacity</Label>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Slider
+                        value={[style.backgroundOpacity ?? 80]}
+                        onValueChange={([v]) => onStyleChange({ backgroundOpacity: v })}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={style.backgroundOpacity ?? 80}
+                        onChange={(e)=> onStyleChange({ backgroundOpacity: Math.max(0, Math.min(100, parseInt(e.target.value || '0', 10))) })}
+                        className="w-20 h-9"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <Label className="text-xs">Padding (T R B L)</Label>
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      <Input type="number" value={style.backgroundPadding?.top ?? 0} onChange={(e)=> onStyleChange({ backgroundPadding: { ...(style.backgroundPadding||{ top:0,right:0,bottom:0,left:0 }), top: parseInt(e.target.value||'0',10) } })} />
+                      <Input type="number" value={style.backgroundPadding?.right ?? 0} onChange={(e)=> onStyleChange({ backgroundPadding: { ...(style.backgroundPadding||{ top:0,right:0,bottom:0,left:0 }), right: parseInt(e.target.value||'0',10) } })} />
+                      <Input type="number" value={style.backgroundPadding?.bottom ?? 0} onChange={(e)=> onStyleChange({ backgroundPadding: { ...(style.backgroundPadding||{ top:0,right:0,bottom:0,left:0 }), bottom: parseInt(e.target.value||'0',10) } })} />
+                      <Input type="number" value={style.backgroundPadding?.left ?? 0} onChange={(e)=> onStyleChange({ backgroundPadding: { ...(style.backgroundPadding||{ top:0,right:0,bottom:0,left:0 }), left: parseInt(e.target.value||'0',10) } })} />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <Label className="text-xs">Border Radius</Label>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Slider
+                        value={[style.backgroundRadius ?? 0]}
+                        onValueChange={([v]) => onStyleChange({ backgroundRadius: v })}
+                        min={0}
+                        max={48}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <Input
+                        type="number"
+                        min={0}
+                        max={48}
+                        step={1}
+                        value={style.backgroundRadius ?? 0}
+                        onChange={(e)=> onStyleChange({ backgroundRadius: Math.max(0, Math.min(96, parseInt(e.target.value || '0', 10))) })}
+                        className="w-20 h-9"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
