@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VideoPlayer, VideoPlayerRef } from '@/components/video/VideoPlayer';
+import { VideoControlBar } from '@/components/video/VideoControlBar';
 import { SubtitleTextEditor } from '@/components/subtitles/SubtitleTextEditor';
 import { SubtitleStyleEditor, SubtitleStyle } from '@/components/subtitles/SubtitleStyleEditor';
 import { StylePresets } from '@/components/subtitles/StylePresets';
