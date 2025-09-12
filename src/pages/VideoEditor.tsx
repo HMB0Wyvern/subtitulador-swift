@@ -49,7 +49,8 @@ export default function VideoEditor() {
     },
     shadow: {
       enabled: true,
-      color: 'rgba(0, 0, 0, 0.8)',
+      color: '#000000',
+      opacity: 80,
       offsetX: 1,
       offsetY: 1,
       blur: 2
