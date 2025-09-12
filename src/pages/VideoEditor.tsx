@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VideoPlayer, VideoPlayerRef } from '@/components/video/VideoPlayer';
 import { SubtitleTextEditor } from '@/components/subtitles/SubtitleTextEditor';
