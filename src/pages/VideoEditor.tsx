@@ -221,11 +221,52 @@ export default function VideoEditor() {
     localStorage.setItem('customStyles', JSON.stringify(next));
   };
 
-  const handleDownload = () => {
-    toast({
-      title: 'Export coming soon',
-      description: 'Export options will be enabled in a later phase.',
-    });
+  const styleToAssOpts = (s: SubtitleStyle) => {
+    const rgba = (hex: string, opacity: number) => hexToRgba(hex, opacity);
+    const hv = s.position.horizontal;
+    const vv = s.position.vertical === 'middle' ? 'center' : s.position.vertical;
+    const alignMap: Record<string, number> = {
+      'bottom_left': 1, 'bottom_center': 2, 'bottom_right': 3,
+      'center_left': 4, 'center_center': 5, 'center_right': 6,
+      'top_left': 7, 'top_center': 8, 'top_right': 9,
+    } as const;
+    const key = `${vv}_${hv}`;
+    const alignment = (alignMap as any)[key] || 2;
+    return {
+      fontName: s.fontFamily,
+      fontSize: s.fontSize,
+      primaryColor: rgba(s.color, s.colorOpacity ?? 100),
+      outlineColor: rgba(s.outline.color, s.outline.opacity ?? 100),
+      outlineWidth: s.outline.enabled ? s.outline.width : 0,
+      shadowColor: rgba(s.shadow.color, s.shadow.opacity ?? 100),
+      shadowBlur: s.shadow.enabled ? s.shadow.blur : 0,
+      alignment: alignment as 1|2|3|4|5|6|7|8|9,
+      marginL: s.position.marginX,
+      marginR: s.position.marginX,
+      marginV: s.position.marginY,
+    };
+  };
+
+  const doExport = (quality: 'low'|'medium'|'high') => {
+    const { currentVideo: cv } = useVideoStore.getState();
+    const base = (cv?.name?.split('.').slice(0, -1).join('.') || 'subtitles');
+    try {
+      if (quality === 'high' || quality === 'medium' || quality === 'low') {
+        const srt = subtitlesToSRT(subtitles);
+        triggerDownload(`${base}.srt`, srt, 'text/plain;charset=utf-8');
+      }
+      if (quality === 'high' || quality === 'medium') {
+        const ass = subtitlesToASS(subtitles, styleToAssOpts(currentStyle));
+        triggerDownload(`${base}.ass`, ass, 'text/plain;charset=utf-8');
+      }
+      if (quality === 'high') {
+        const json = JSON.stringify(subtitles, null, 2);
+        triggerDownload(`${base}.json`, json, 'application/json;charset=utf-8');
+      }
+      toast({ title: 'Descargas iniciadas', description: 'Exportación de subtítulos según la calidad seleccionada.' });
+    } catch (e) {
+      toast({ title: 'Error al exportar', description: e instanceof Error ? e.message : 'Fallo exportando archivos' });
+    }
   };
 
   if (!currentVideo) {
