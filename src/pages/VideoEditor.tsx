@@ -305,12 +305,30 @@ export default function VideoEditor() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleDownload}>
-              <Download className="w-4 h-4 mr-2" />
-              Download Video
-            </Button>
-          </div>
+          <TooltipProvider>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>Selecciona calidad y formato de exportación</TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Exportar Subtítulos</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => doExport('high')}>Alta (SRT + ASS + JSON)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => doExport('medium')}>Media (SRT + ASS)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => doExport('low')}>Baja (SRT)</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </TooltipProvider>
         </div>
       </header>
 
