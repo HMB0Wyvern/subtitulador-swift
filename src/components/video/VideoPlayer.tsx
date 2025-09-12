@@ -1,15 +1,17 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { SubtitleData } from '@/services/api';
 import { SubtitleOverlay } from './SubtitleOverlay';
-import { VideoControls } from './VideoControls';
 import { Card } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
 
 export interface VideoPlayerProps {
   videoUrl: string;
   subtitles: SubtitleData[];
   onTimeUpdate?: (currentTime: number) => void;
   onSubtitleSelect?: (subtitle: SubtitleData | null) => void;
+  onPlayStateChange?: (isPlaying: boolean) => void;
+  onVolumeStateChange?: (volume: number, muted: boolean) => void;
+  onDuration?: (duration: number) => void;
+  onNaturalSize?: (width: number, height: number) => void;
   className?: string;
 }
 
@@ -19,13 +21,27 @@ export interface VideoPlayerRef {
   play: () => void;
   pause: () => void;
   isPlaying: () => boolean;
+  setVolume: (v: number) => void;
+  setMuted: (m: boolean) => void;
+  toggleMute: () => void;
+  toggleFullscreen: () => void;
 }
 
 export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
-  ({ videoUrl, subtitles, onTimeUpdate, onSubtitleSelect, className }, ref) => {
+  ({
+    videoUrl,
+    subtitles,
+    onTimeUpdate,
+    onSubtitleSelect,
+    onPlayStateChange,
+    onVolumeStateChange,
+    onDuration,
+    onNaturalSize,
+    className
+  }, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -48,13 +64,29 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
       pause: () => {
         videoRef.current?.pause();
       },
-      isPlaying: () => isPlaying
+      isPlaying: () => isPlaying,
+      setVolume: (v: number) => {
+        if (videoRef.current) videoRef.current.volume = Math.min(1, Math.max(0, v));
+      },
+      setMuted: (m: boolean) => {
+        if (videoRef.current) videoRef.current.muted = m;
+      },
+      toggleMute: () => {
+        if (videoRef.current) videoRef.current.muted = !videoRef.current.muted;
+      },
+      toggleFullscreen: () => {
+        if (!document.fullscreenElement && containerRef.current) {
+          containerRef.current.requestFullscreen();
+        } else if (document.fullscreenElement) {
+          document.exitFullscreen();
+        }
+      }
     }));
 
     // Find active subtitle based on current time
     const findActiveSubtitle = useCallback((time: number): SubtitleData | null => {
       return subtitles.find(
-        sub => time >= sub.startTime && time <= sub.endTime
+        (sub) => time >= sub.startTime && time <= sub.endTime
       ) || null;
     }, [subtitles]);
 
@@ -75,18 +107,29 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
     }, [onTimeUpdate, findActiveSubtitle, currentSubtitle, onSubtitleSelect]);
 
     // Video event handlers
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => {
+      setIsPlaying(true);
+      onPlayStateChange?.(true);
+    };
+    const handlePause = () => {
+      setIsPlaying(false);
+      onPlayStateChange?.(false);
+    };
     const handleLoadedMetadata = () => {
       if (videoRef.current) {
-        setDuration(videoRef.current.duration);
+        const d = videoRef.current.duration;
+        setDuration(d);
+        onDuration?.(d);
       }
     };
 
     const handleVolumeChange = () => {
       if (videoRef.current) {
-        setVolume(videoRef.current.volume);
-        setIsMuted(videoRef.current.muted);
+        const v = videoRef.current.volume;
+        const m = videoRef.current.muted;
+        setVolume(v);
+        setIsMuted(m);
+        onVolumeStateChange?.(v, m);
       }
     };
 
@@ -206,9 +249,12 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
       if (videoRef.current) {
         const w = videoRef.current.videoWidth;
         const h = videoRef.current.videoHeight;
-        if (w && h) setNaturalSize({ width: w, height: h });
+        if (w && h) {
+          setNaturalSize({ width: w, height: h });
+          onNaturalSize?.(w, h);
+        }
       }
-    }, []);
+    }, [onNaturalSize]);
 
     useEffect(() => {
       updateNaturalSize();
@@ -224,13 +270,13 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
       : { aspectRatio: '16 / 9' };
 
     return (
-      <Card className={`relative bg-black overflow-hidden ${className}`}>
-        <div ref={containerRef} className="relative w-full bg-black group" style={{...aspectStyle, maxHeight: 'calc(100vh - 260px)'}}>
+      <Card className={`relative overflow-hidden ${className}`}>
+        <div ref={containerRef} className="relative w-full" style={{ ...aspectStyle }}>
           {/* Video Element */}
           <video
             ref={videoRef}
             src={videoUrl}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-fill"
             onTimeUpdate={handleTimeUpdate}
             onPlay={handlePlay}
             onPause={handlePause}
@@ -247,43 +293,6 @@ export const VideoPlayer = React.forwardRef<VideoPlayerRef, VideoPlayerProps>(
             currentTime={currentTime}
             containerRef={containerRef}
           />
-
-          {/* Video Controls */}
-          <VideoControls
-            isPlaying={isPlaying}
-            currentTime={currentTime}
-            duration={duration}
-            volume={volume}
-            isMuted={isMuted}
-            isFullscreen={isFullscreen}
-            onPlayPause={togglePlayPause}
-            onSeek={handleSeek}
-            onVolumeChange={handleVolumeSet}
-            onMute={toggleMute}
-            onFullscreen={toggleFullscreen}
-            showProgress={false}
-          />
-
-          {/* Click to play/pause overlay - only in center area to avoid blocking controls */}
-          <div
-            className="absolute inset-x-0 top-0 bottom-16 cursor-pointer"
-            onClick={togglePlayPause}
-          />
-        </div>
-        {/* Timeline outside video */}
-        <div className="p-3">
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-muted-foreground min-w-10 text-right">{Math.floor(currentTime/60)}:{Math.floor(currentTime%60).toString().padStart(2,'0')}</div>
-            <div className="flex-1">
-              <Slider
-                value={[duration>0 ? (currentTime/duration)*100 : 0]}
-                max={100}
-                step={0.1}
-                onValueChange={(v)=>handleSeek(((v[0]||0)/100)*duration)}
-              />
-            </div>
-            <div className="text-xs text-muted-foreground min-w-10">{Math.floor(duration/60)}:{Math.floor(duration%60).toString().padStart(2,'0')}</div>
-          </div>
         </div>
       </Card>
     );
