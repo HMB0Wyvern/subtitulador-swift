@@ -173,6 +173,24 @@ export default function VideoEditor() {
   };
 
   const [openPanel, setOpenPanel] = useState<null | 'choose' | 'modify'>(null);
+  const [editingStyleId, setEditingStyleId] = useState<string | null>(null);
+  const [originalEditingStyle, setOriginalEditingStyle] = useState<SubtitleStyle | null>(null);
+  const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
+  const [pendingPanel, setPendingPanel] = useState<null | 'choose' | 'modify'>(null);
+
+  const isDirty = useMemo(() => {
+    if (!editingStyleId || !originalEditingStyle) return false;
+    try { return JSON.stringify(originalEditingStyle) !== JSON.stringify(currentStyle); } catch { return false; }
+  }, [editingStyleId, originalEditingStyle, currentStyle]);
+
+  const guardedSetOpenPanel = (next: null | 'choose' | 'modify') => {
+    if (openPanel === 'modify' && isDirty && next !== 'modify') {
+      setPendingPanel(next);
+      setConfirmLeaveOpen(true);
+      return;
+    }
+    setOpenPanel(next);
+  };
   const [customStyles, setCustomStyles] = useState<CustomStyle[]>(() => {
     try {
       const raw = localStorage.getItem('customStyles');
