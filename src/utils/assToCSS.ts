@@ -7,6 +7,8 @@ export interface CSSSubtitleStyle {
   fontWeight: string;
   color: string;
   backgroundColor: string;
+  padding?: string;
+  borderRadius?: string;
   textShadow: string;
   webkitTextStroke: string;
   position: 'absolute';
