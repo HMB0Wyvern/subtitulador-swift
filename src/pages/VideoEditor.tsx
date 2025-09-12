@@ -44,7 +44,8 @@ export default function VideoEditor() {
     outline: {
       enabled: true,
       color: '#000000',
-      width: 2
+      width: 2,
+      opacity: 100
     },
     shadow: {
       enabled: true,
