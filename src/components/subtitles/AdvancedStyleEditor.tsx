@@ -48,10 +48,19 @@ const fontOptions = [
 
 export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) {
   const [open, setOpen] = useState(false);
+  const genId = () => `style_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const dedup = (arr: SavedStyle[]) => Array.from(new Map(arr.map(s => [s.id, s])).values());
   const [styles, setStyles] = useState<SavedStyle[]>(() => {
     const raw = localStorage.getItem('subtitleStyles');
     if (raw) {
-      try { return JSON.parse(raw); } catch {}
+      try {
+        const parsed = JSON.parse(raw) as SavedStyle[];
+        const unique = dedup(parsed);
+        if (unique.length !== parsed.length) {
+          localStorage.setItem('subtitleStyles', JSON.stringify(unique));
+        }
+        return unique;
+      } catch {}
     }
     return [];
   });
@@ -90,14 +99,15 @@ export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) 
     onStyleApply(styleData);
     if (styleData.name.trim()) {
       setStyles(prev => {
-        const id = activeStyleId || `style_${Date.now()}`;
+        const id = activeStyleId || genId();
         const next: SavedStyle[] = [
           ...prev.filter(s => s.id !== id),
           { id, ...styleData }
         ];
-        localStorage.setItem('subtitleStyles', JSON.stringify(next));
+        const unique = dedup(next);
+        localStorage.setItem('subtitleStyles', JSON.stringify(unique));
         setActiveStyleId(id);
-        return next;
+        return unique;
       });
     }
     setOpen(false);
@@ -131,10 +141,10 @@ export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) 
   };
 
   const newStyle = () => {
-    const id = `style_${Date.now()}`;
+    const id = genId();
     const base: SavedStyle = { id, ...styleData, name: `Style ${styles.length + 1}` };
     setStyles(prev => {
-      const next = [...prev, base];
+      const next = dedup([...prev, base]);
       localStorage.setItem('subtitleStyles', JSON.stringify(next));
       return next;
     });
@@ -146,10 +156,10 @@ export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) 
     if (!activeStyleId) return;
     const original = styles.find(s => s.id === activeStyleId);
     if (!original) return;
-    const id = `style_${Date.now()}`;
+    const id = genId();
     const dup: SavedStyle = { ...original, id, name: `${original.name} Copy` };
     setStyles(prev => {
-      const next = [...prev, dup];
+      const next = dedup([...prev, dup]);
       localStorage.setItem('subtitleStyles', JSON.stringify(next));
       return next;
     });
@@ -161,7 +171,7 @@ export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) 
   const deleteStyle = () => {
     if (!activeStyleId) return;
     setStyles(prev => {
-      const next = prev.filter(s => s.id !== activeStyleId);
+      const next = dedup(prev.filter(s => s.id !== activeStyleId));
       localStorage.setItem('subtitleStyles', JSON.stringify(next));
       return next;
     });
