@@ -38,6 +38,8 @@ interface AdvancedStyleEditorProps {
   onStyleApply: (style: AdvancedStyleData) => void;
 }
 
+type SavedStyle = AdvancedStyleData & { id: string };
+
 const fontOptions = [
   'Arial', 'Roboto', 'Inter', 'Helvetica', 'Georgia', 'Times New Roman', 
   'Verdana', 'Tahoma', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 
@@ -46,6 +48,14 @@ const fontOptions = [
 
 export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) {
   const [open, setOpen] = useState(false);
+  const [styles, setStyles] = useState<SavedStyle[]>(() => {
+    const raw = localStorage.getItem('subtitleStyles');
+    if (raw) {
+      try { return JSON.parse(raw); } catch {}
+    }
+    return [];
+  });
+  const [activeStyleId, setActiveStyleId] = useState<string | null>(null);
   const [styleData, setStyleData] = useState<AdvancedStyleData>({
     name: 'Default',
     fontName: 'Arial',
@@ -78,6 +88,18 @@ export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) 
 
   const handleApply = () => {
     onStyleApply(styleData);
+    if (styleData.name.trim()) {
+      setStyles(prev => {
+        const id = activeStyleId || `style_${Date.now()}`;
+        const next: SavedStyle[] = [
+          ...prev.filter(s => s.id !== id),
+          { id, ...styleData }
+        ];
+        localStorage.setItem('subtitleStyles', JSON.stringify(next));
+        setActiveStyleId(id);
+        return next;
+      });
+    }
     setOpen(false);
   };
 
@@ -108,6 +130,67 @@ export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) 
     );
   };
 
+  const newStyle = () => {
+    const id = `style_${Date.now()}`;
+    const base: SavedStyle = { id, ...styleData, name: `Style ${styles.length + 1}` };
+    setStyles(prev => {
+      const next = [...prev, base];
+      localStorage.setItem('subtitleStyles', JSON.stringify(next));
+      return next;
+    });
+    setActiveStyleId(id);
+    setStyleData(base);
+  };
+
+  const duplicateStyle = () => {
+    if (!activeStyleId) return;
+    const original = styles.find(s => s.id === activeStyleId);
+    if (!original) return;
+    const id = `style_${Date.now()}`;
+    const dup: SavedStyle = { ...original, id, name: `${original.name} Copy` };
+    setStyles(prev => {
+      const next = [...prev, dup];
+      localStorage.setItem('subtitleStyles', JSON.stringify(next));
+      return next;
+    });
+    setActiveStyleId(id);
+    const { id: _id, ...rest } = dup;
+    setStyleData(rest);
+  };
+
+  const deleteStyle = () => {
+    if (!activeStyleId) return;
+    setStyles(prev => {
+      const next = prev.filter(s => s.id !== activeStyleId);
+      localStorage.setItem('subtitleStyles', JSON.stringify(next));
+      return next;
+    });
+    const fallback = styles.find(s => s.id !== activeStyleId) || null;
+    setActiveStyleId(fallback?.id || null);
+    if (fallback) {
+      const { id, ...rest } = fallback as SavedStyle;
+      setStyleData(rest);
+    }
+  };
+
+  const selectStyle = (id: string) => {
+    setActiveStyleId(id);
+    const found = styles.find(s => s.id === id);
+    if (found) {
+      const { id: _id, ...rest } = found;
+      setStyleData(rest);
+    }
+  };
+
+  const renameStyle = (id: string, name: string) => {
+    setStyles(prev => {
+      const next = prev.map(s => (s.id === id ? { ...s, name } : s));
+      localStorage.setItem('subtitleStyles', JSON.stringify(next));
+      return next;
+    });
+    if (activeStyleId === id) setStyleData(prev => ({ ...prev, name }));
+  };
+
   const ColorPicker = ({ label, value, onChange }: { label: string; value: string; onChange: (color: string) => void }) => (
     <div className="flex items-center gap-2">
       <Label className="text-xs min-w-[60px]">{label}:</Label>
@@ -136,13 +219,34 @@ export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) 
           Editor Avanzado
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-card">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Palette className="w-5 h-5" />
             Editor de Estilos Aegisub
           </DialogTitle>
         </DialogHeader>
+
+        {/* Gestión de estilos */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Nombre de estilo:</Label>
+            <Input value={styleData.name} onChange={(e) => updateStyle('name', e.target.value)} className="h-8 w-48" />
+            <Select value={activeStyleId || ''} onValueChange={selectStyle}>
+              <SelectTrigger className="h-8 w-44">
+                <SelectValue placeholder="Seleccionar estilo" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {styles.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={newStyle}>Nuevo</Button>
+            <Button size="sm" variant="outline" onClick={duplicateStyle}>Duplicar</Button>
+            <Button size="sm" variant="destructive" onClick={deleteStyle}>Eliminar</Button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Vista Previa */}
@@ -231,6 +335,22 @@ export function AdvancedStyleEditor({ onStyleApply }: AdvancedStyleEditorProps) 
                   min="8"
                   max="200"
                 />
+              </div>
+
+              <div>
+                <Label className="text-sm">Codificación</Label>
+                <Select value={String(styleData.encoding)} onValueChange={(v) => updateStyle('encoding', parseInt(v) || 1)}>
+                  <SelectTrigger className="h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 - ANSI</SelectItem>
+                    <SelectItem value="1">1 - Predeterminado</SelectItem>
+                    <SelectItem value="2">2 - Chino</SelectItem>
+                    <SelectItem value="3">3 - Japonés</SelectItem>
+                    <SelectItem value="4">4 - Coreano</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
