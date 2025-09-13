@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { VideoPlayer } from '@/components/video/VideoPlayer';
+import { VideoPlayer, VideoPlayerRef } from '@/components/video/VideoPlayer';
 import { SubtitleTextEditor } from '@/components/subtitles/SubtitleTextEditor';
+import { VideoControlBar } from '@/components/video/VideoControlBar';
 import { SubtitleStyleEditor } from '@/components/subtitles/SubtitleStyleEditor';
 import { StylePresets } from '@/components/subtitles/StylePresets';
 import { AdvancedStyleEditor } from '@/components/subtitles/AdvancedStyleEditor';
@@ -34,6 +35,10 @@ export default function VideoEditor() {
   const [editingSubtitle, setEditingSubtitle] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const playerRef = useRef<VideoPlayerRef>(null);
   const [selectedSubtitle, setSelectedSubtitle] = useState<SubtitleData | undefined>();
   const [exportFormat, setExportFormat] = useState('MP4');
 
@@ -72,6 +77,34 @@ export default function VideoEditor() {
       shadow: updates.shadow ? { ...prev.shadow, ...updates.shadow } : prev.shadow,
       position: updates.position ? { ...prev.position, ...updates.position } : prev.position
     }));
+
+    // Apply updates in real-time to all subtitles for live preview
+    setSubtitles(subtitles.map(s => ({
+      ...s,
+      styles: {
+        fontFamily: (updates.fontFamily ?? s.styles.fontFamily),
+        fontSize: (updates.fontSize ?? s.styles.fontSize),
+        fontWeight: (updates.fontWeight ?? s.styles.fontWeight),
+        color: (updates.color ?? s.styles.color),
+        backgroundColor: updates.backgroundEnabled ? (updates.backgroundColor ?? s.styles.backgroundColor) : (updates.backgroundEnabled === false ? 'transparent' : s.styles.backgroundColor),
+        outline: {
+          width: (updates.outline?.enabled === false) ? 0 : (updates.outline?.width ?? s.styles.outline.width),
+          color: (updates.outline?.color ?? s.styles.outline.color)
+        },
+        shadow: {
+          offsetX: (updates.shadow?.enabled === false) ? 0 : (updates.shadow?.offsetX ?? s.styles.shadow.offsetX),
+          offsetY: (updates.shadow?.enabled === false) ? 0 : (updates.shadow?.offsetY ?? s.styles.shadow.offsetY),
+          blur: (updates.shadow?.enabled === false) ? 0 : (updates.shadow?.blur ?? s.styles.shadow.blur),
+          color: (updates.shadow?.color ?? s.styles.shadow.color)
+        },
+        position: {
+          horizontal: (updates.position?.horizontal ?? s.styles.position.horizontal),
+          vertical: (updates.position?.vertical === 'middle' ? 'center' : (updates.position?.vertical ?? s.styles.position.vertical)),
+          marginX: (updates.position?.marginX ?? s.styles.position.marginX),
+          marginY: (updates.position?.marginY ?? s.styles.position.marginY)
+        }
+      }
+    })));
   };
 
   useEffect(() => {
@@ -293,15 +326,38 @@ export default function VideoEditor() {
         {/* Video Area */}
         <div className="flex-1 flex flex-col bg-background">
           {/* Video Player */}
-          <div className="flex-1 flex items-center justify-center p-6 bg-black/5">
+          <div className="flex-1 flex flex-col items-center justify-center p-6 bg-black">
             <div className="w-full max-w-4xl">
-              <VideoPlayer 
-                videoUrl={currentVideo?.url || ''} 
+              <VideoPlayer
+                ref={playerRef}
+                videoUrl={currentVideo?.url || ''}
                 subtitles={subtitles}
                 onTimeUpdate={setCurrentTime}
                 onDuration={setDuration}
+                onPlayStateChange={setIsPlaying}
+                onVolumeStateChange={(v, m) => { setVolume(v); setIsMuted(m); }}
                 className="w-full"
               />
+
+              <div className="w-full mt-4">
+                <VideoControlBar
+                  isPlaying={isPlaying}
+                  currentTime={currentTime}
+                  duration={duration}
+                  volume={volume}
+                  isMuted={isMuted}
+                  onPlayPause={() => {
+                    if (playerRef.current) {
+                      playerRef.current.isPlaying() ? playerRef.current.pause() : playerRef.current.play();
+                    }
+                  }}
+                  onSeek={(t) => playerRef.current?.seekTo(t)}
+                  onVolumeChange={(v) => playerRef.current?.setVolume(v)}
+                  onMute={() => playerRef.current?.toggleMute()}
+                  onToggleFullscreen={() => playerRef.current?.toggleFullscreen()}
+                  isFullscreen={false}
+                />
+              </div>
             </div>
           </div>
 
