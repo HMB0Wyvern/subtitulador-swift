@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ArrowLeft, Download, Plus, Search, SkipForward, Video, FileText, Palette, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,6 @@ import { SubtitleTimeline } from '@/components/video/SubtitleTimeline';
 import { useVideoStore, SubtitleData } from '@/store/useVideoStore';
 import { useToast } from '@/hooks/use-toast';
 import { exportSubtitles } from '@/utils/subtitleExport';
-import { useRef } from 'react';
 
 export default function VideoEditor() {
   const { 
