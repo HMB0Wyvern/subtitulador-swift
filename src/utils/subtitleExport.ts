@@ -152,5 +152,3 @@ export function triggerDownload(filename: string, content: string | Blob, mimeTy
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-
-export { subtitlesToASS };
